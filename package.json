@@ -1,0 +1,22 @@
+{
+  "name": "jira-md-sync",
+  "version": "0.0.1",
+  "description": "CLI tool for syncing Jira issues to Markdown (placeholder)",
+  "license": "MIT",
+  "bin": {
+    "jira-md-sync": "./index.js"
+  },
+  "main": "index.js",
+  "type": "module",
+  "files": [
+    "index.js",
+    "README.md",
+    "LICENSE"
+  ],
+  "keywords": [
+    "jira",
+    "markdown",
+    "cli",
+    "placeholder"
+  ]
+}
