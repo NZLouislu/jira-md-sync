@@ -1,0 +1,21 @@
+{
+  "name": "jira-md-sync-examples",
+  "private": true,
+  "version": "0.0.0",
+  "scripts": {
+    "md-to-jira": "node ../dist/src/cli/md-to-jira-cli.js",
+    "md-to-jira:debug": "set LOG_LEVEL=debug&& node ../dist/src/cli/md-to-jira-cli.js",
+    "md-to-jira:dry-run": "set DRY_RUN=true&& node ../dist/src/cli/md-to-jira-cli.js",
+    "jira-to-md": "node ../dist/src/cli/jira-to-md-cli.js",
+    "jira-to-md:debug": "set LOG_LEVEL=debug&& node ../dist/src/cli/jira-to-md-cli.js",
+    "jira-to-md:dry-run": "set DRY_RUN=true&& node ../dist/src/cli/jira-to-md-cli.js",
+    "update-assignees": "ts-node update-jira-assignees.ts",
+    "test": "mocha -r ts-node/register \"__tests__/**/*.test.ts\"",
+    "test:integration": "ts-node test-integration.ts"
+  },
+  "devDependencies": {
+    "mocha": "^10.4.0",
+    "ts-node": "^10.9.2",
+    "typescript": "^5.6.3"
+  }
+}

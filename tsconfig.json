@@ -1,0 +1,45 @@
+{
+  "compilerOptions": {
+    /* Basic Options */
+    "module": "commonjs",
+    "moduleResolution": "node",
+    "esModuleInterop": true,
+    "allowSyntheticDefaultImports": true,
+    "newLine": "LF",
+    "outDir": "./dist/",
+    "rootDir": "./",
+    "target": "es2018",
+    "sourceMap": true,
+    "declaration": true,
+    "declarationMap": true,
+    "jsx": "preserve",
+    "skipLibCheck": true,
+    "lib": [
+      "es2018",
+      "dom"
+    ],
+    /* Strict Type-Checking Options */
+    "strict": true,
+    /* Additional Checks */
+    /* Report errors on unused locals. */
+    "noUnusedLocals": true,
+    /* Report errors on unused parameters. */
+    "noUnusedParameters": true,
+    /* Report error when not all code paths in function return a value. */
+    "noImplicitReturns": true,
+    /* Report errors for fallthrough cases in switch statement. */
+    "noFallthroughCasesInSwitch": true
+  },
+  "include": [
+    "src/**/*",
+    "index.ts",
+    "types/**/*"
+  ],
+  "exclude": [
+    ".git",
+    "node_modules",
+    "dist",
+    "examples",
+    "**/*.test.ts"
+  ]
+}

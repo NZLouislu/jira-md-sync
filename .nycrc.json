@@ -1,0 +1,35 @@
+{
+  "extension": [
+    ".ts"
+  ],
+  "include": [
+    "src/jira/format-converter.ts",
+    "src/jira/jira-client-wrapper.ts",
+    "src/jira/jira-to-md.ts",
+    "src/jira/md-to-jira.ts",
+    "src/jira/markdown-parser.ts",
+    "src/jira/renderer.ts",
+    "src/jira/status-normalizer.ts",
+    "src/jira/story-format.ts",
+    "src/platform/**/*.ts",
+    "src/utils/**/*.ts"
+  ],
+  "exclude": [
+    "**/*.test.ts",
+    "**/__tests__/**",
+    "examples/**",
+    "dist/**",
+    "node_modules/**",
+    "types/**"
+  ],
+  "reporter": [
+    "text-summary",
+    "lcov"
+  ],
+  "all": true,
+  "check-coverage": true,
+  "branches": 50,
+  "functions": 70,
+  "lines": 60,
+  "statements": 60
+}

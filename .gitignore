@@ -1,0 +1,32 @@
+# Node.js dependencies
+node_modules/
+
+# Build output
+dist/
+build/
+
+# Logs
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# Environment variables
+.env
+
+# IDE/editor settings
+.vscode/
+.idea/
+.DS_Store
+/tasks
+/lib
+/coverage/
+/.nyc_output
+/.codeflicker/
+
+# Tests (ignore ephemeral artifacts under src/testing; keep .test.ts sources)
+src/testing/**/__snapshots__/
+src/testing/**/.tmp/
+src/testing/**/*.tmp.*
+src/testing/**/*.log
+src/testing/**/output/
+src/testing/**/export/
