@@ -1,100 +1,115 @@
-# Examples Directory
+# Jira MD Sync - Examples
 
-This directory contains example markdown files and test fixtures demonstrating the Trello MD Sync tool.
+This directory contains test and example scripts.
 
-## Directory Structure
+## Commands
 
-```
-examples/
-├── md/                    # Input markdown files
-│   └── test-todo-list.md  # Multi-story todo list format
-├── trello/                # Example story formats
-│   ├── single-story-example.md
-│   └── multi-story-example.md
-├── items/                 # Output directory for exported stories
-└── __tests__/             # Test fixtures
-```
-
-## Story Format
-
-All examples use the standardized `STORY-XXXX` format:
-
-**Single-story format:**
-```markdown
-## Story: STORY-001 Enable Trello-only environment
-
-### Story ID
-STORY-001
-
-### Status
-Backlog
-
-### Description
-Story description here...
-
-### Acceptance Criteria
-- [ ] Criterion 1
-- [ ] Criterion 2
-```
-
-**Multi-story block format:**
-```markdown
-## Backlog
-
-- Story: STORY-01 Feature Name
-  id: STORY-01
-  description: Feature description
-  acceptance_criteria:
-    - [ ] Criterion 1
-    - [ ] Criterion 2
-  priority: p1
-  labels: [tag1, tag2]
-  assignees: [user1]
-```
-
-## Running Examples
-
-### Import to Trello (md → Trello)
+### Import Markdown to Jira (Create New Issues)
 
 ```bash
-npm run build
-npm run md
+npm run md-to-jira
 ```
 
-With dry-run:
-```bash
-set MDSYNC_DRY_RUN=1&& npm run md
-```
+**Behavior:**
+- ✅ Creates new issues
+- ❌ Skips existing issues (no updates)
+- This is the **default and recommended** behavior
 
-### Export from Trello (Trello → md)
-
-```bash
-npm run build
-npm run trello
-```
-
-## Verification
-
-Run tests to verify examples:
+### Export Jira to Markdown
 
 ```bash
-npm test
+npm run jira-to-md
 ```
 
-All example files should:
-- Use `STORY-XXXX` naming convention
-- Parse without errors
-- Round-trip successfully (export → import → export produces identical output)
+**Behavior:**
+- Exports all issues from Jira to markdown files
+- Supports pagination, can export unlimited issues (not limited to 50)
 
-## Custom Field Usage
+### Test Only: Update Mode (⚠️ For Testing Only)
 
-Examples work **without** requiring Trello custom fields. The story ID is embedded in the card name using the `STORY-XXXX Title` format.
+```bash
+npm run md-to-jira:update
+```
 
+**Behavior:**
+- ✅ Creates new issues
+- ⚠️ **Updates existing issues** (by storyId)
+- **Warning:** This will overwrite content in Jira!
+- **Purpose:** Only for testing format conversion
 
-## Legacy Format Support
+### Other Commands
 
-The parser still reads legacy `ID:` format for backward compatibility:
-- `ID: 123 Title` → parsed correctly
-- Mixed documents with both formats work
+```bash
+# Dry-run mode (preview without executing)
+npm run md-to-jira:dry-run
 
-However, all **new** exports use the `STORY-XXXX` format.
+# Debug mode (show detailed logs)
+npm run md-to-jira:debug
+
+# Export a single issue
+npm run jira-to-md -- PROJ-123
+```
+
+## Important Notes
+
+### Why No Updates by Default?
+
+1. **Avoid Conflicts** - Content in Jira may have been modified by others
+2. **One-way Sync** - Jira is the source of truth, Markdown is the export format
+3. **Safety** - Prevents accidental overwriting of important data
+
+### When to Use Update Mode?
+
+**Only use `md-to-jira:update` in these cases:**
+- ✅ Testing format conversion functionality
+- ✅ Verifying markdown to Jira rendering
+- ✅ Development and debugging
+
+**Do NOT use in these cases:**
+- ❌ Production environment
+- ❌ Team collaboration projects
+- ❌ Issues that have been edited by others
+
+## Test Files
+
+- `md/test-format-rendering.md` - Format testing (10 stories)
+- `md/test-todo-list.md` - Todo list testing (20 stories)
+- `md/test-formats.md` - Format specification testing (13 stories)
+
+## Environment Variables
+
+Configure in `.env` file:
+
+```env
+JIRA_URL=https://your-domain.atlassian.net
+JIRA_EMAIL=your.email@example.com
+JIRA_API_TOKEN=your_api_token_here
+JIRA_PROJECT_KEY=PROJ
+
+# For testing only (do NOT set in production)
+# ALLOW_JIRA_UPDATE=true
+```
+
+## Recommended Workflows
+
+### Normal Usage Flow
+
+1. **Export from Jira** → `npm run jira-to-md`
+2. **Edit markdown files**
+3. **Create new issues** → `npm run md-to-jira`
+4. **Edit and manage issues in Jira**
+
+### Format Testing Flow
+
+1. **Create test markdown** → Edit `md/test-*.md`
+2. **Upload to Jira (update mode)** → `npm run md-to-jira:update`
+3. **Verify format in Jira**
+4. **Export for verification** → `npm run jira-to-md`
+5. **Compare format correctness**
+
+## Notes
+
+- Update mode is controlled by the `ALLOW_JIRA_UPDATE=true` environment variable
+- This variable **should NOT** be set in production `.env` files
+- When published as an npm package, the default behavior is create-only, no updates
+- This ensures users won't accidentally overwrite data in Jira

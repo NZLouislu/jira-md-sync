@@ -113,11 +113,14 @@ export interface JiraTodo {
 }
 
 export interface JiraSearchResult {
-  expand: string;
-  startAt: number;
-  maxResults: number;
-  total: number;
+  expand?: string;
+  startAt?: number;
+  maxResults?: number;
+  total?: number;
   issues: JiraIssue[];
+  // Jira Cloud API v3 pagination
+  nextPageToken?: string;
+  isLast?: boolean;
 }
 
 export interface JiraCreateIssuePayload {

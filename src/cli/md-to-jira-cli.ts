@@ -37,7 +37,7 @@ export async function mdToJiraCli(): Promise<void> {
   const projectKey = process.env.JIRA_PROJECT_KEY || "";
   const issueTypeId = process.env.JIRA_ISSUE_TYPE_ID;
 
-  const inputDir = customInputDir || (process.env.MD_INPUT_DIR || "examples/md").trim();
+  const inputDir = customInputDir || (process.env.MD_INPUT_DIR || "./md").trim();
 
   // Resolve path: if absolute, use as-is; if relative, resolve from project root
   let resolvedInputDir: string;

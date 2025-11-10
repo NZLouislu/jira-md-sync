@@ -37,7 +37,7 @@ export async function jiraToMdCli(): Promise<void> {
   const apiToken = process.env.JIRA_API_TOKEN || "";
   const projectKey = process.env.JIRA_PROJECT_KEY || "";
 
-  const outputDirEnv = customOutputDir || (process.env.MD_OUTPUT_DIR || "examples/jira").trim();
+  const outputDirEnv = customOutputDir || (process.env.MD_OUTPUT_DIR || "./jira").trim();
 
   // Resolve path: if absolute, use as-is; if relative, resolve from project root
   let outputDir: string;

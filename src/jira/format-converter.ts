@@ -30,7 +30,15 @@ export class FormatConverter {
   adfToMarkdown(adf: any): string {
     if (!adf) return '';
     const jiraWiki = this.adfToJiraWiki(adf);
-    return this.jiraToMarkdown(jiraWiki);
+    let markdown = this.jiraToMarkdown(jiraWiki);
+    
+    // Fix jira2md bug: it converts [ ] to < >
+    // This is a workaround for checkbox formatting
+    markdown = markdown.replace(/- < > /g, '- [ ] ');
+    markdown = markdown.replace(/- <x> /g, '- [x] ');
+    markdown = markdown.replace(/- <X> /g, '- [X] ');
+    
+    return markdown;
   }
 
   private jiraWikiToADF(jiraWiki: string): any {
@@ -138,21 +146,90 @@ export class FormatConverter {
           attrs: { level: 6 },
           content: this.parseInlineJiraWiki(line.substring(3).trim())
         });
-      } else if (line.startsWith('* ') || line.startsWith('*\t')) {
-        const itemText = line.substring(line.indexOf('*') + 1).trim();
-        if (!currentList) {
-          currentList = {
-            type: 'bulletList',
-            content: []
-          };
+      } else if (line.startsWith('bq.')) {
+        if (currentList) {
+          content.push(currentList);
+          currentList = null;
         }
-        currentList.content.push({
-          type: 'listItem',
+        content.push({
+          type: 'blockquote',
           content: [{
             type: 'paragraph',
-            content: this.parseInlineJiraWiki(itemText)
+            content: this.parseInlineJiraWiki(line.substring(3).trim())
           }]
         });
+      } else if (line.startsWith('{quote}')) {
+        if (currentList) {
+          content.push(currentList);
+          currentList = null;
+        }
+        // Collect all lines until {quote} closing tag
+        const quoteLines: string[] = [];
+        i++;
+        while (i < lines.length && !lines[i].startsWith('{quote}')) {
+          quoteLines.push(lines[i]);
+          i++;
+        }
+        content.push({
+          type: 'blockquote',
+          content: [{
+            type: 'paragraph',
+            content: this.parseInlineJiraWiki(quoteLines.join('\n'))
+          }]
+        });
+      } else if (line.startsWith('* ') || line.startsWith('*\t') || line.startsWith('- ') || line.startsWith('-\t')) {
+        const bulletChar = line.startsWith('*') ? '*' : '-';
+        const itemText = line.substring(line.indexOf(bulletChar) + 1).trim();
+        
+        // Check if this is a checkbox item (task)
+        const checkboxMatch = itemText.match(/^\[([ xX])\]\s+(.+)$/);
+        
+        if (checkboxMatch) {
+          // This is a checkbox item - create taskList
+          const isChecked = checkboxMatch[1].toLowerCase() === 'x';
+          const taskText = checkboxMatch[2];
+          
+          if (!currentList || currentList.type !== 'taskList') {
+            if (currentList) {
+              content.push(currentList);
+            }
+            currentList = {
+              type: 'taskList',
+              attrs: { localId: `task-list-${Date.now()}` },
+              content: []
+            };
+          }
+          
+          currentList.content.push({
+            type: 'taskItem',
+            attrs: {
+              localId: `task-${Date.now()}-${currentList.content.length}`,
+              state: isChecked ? 'DONE' : 'TODO'
+            },
+            content: [{
+              type: 'text',
+              text: taskText
+            }]
+          });
+        } else {
+          // Regular bullet list item
+          if (!currentList || currentList.type !== 'bulletList') {
+            if (currentList) {
+              content.push(currentList);
+            }
+            currentList = {
+              type: 'bulletList',
+              content: []
+            };
+          }
+          currentList.content.push({
+            type: 'listItem',
+            content: [{
+              type: 'paragraph',
+              content: this.parseInlineJiraWiki(itemText)
+            }]
+          });
+        }
       } else if (line.startsWith('# ') || line.startsWith('#\t')) {
         const itemText = line.substring(line.indexOf('#') + 1).trim();
         if (!currentList || currentList.type !== 'orderedList') {
@@ -202,69 +279,122 @@ export class FormatConverter {
     if (!text) return [{ type: 'text', text: '' }];
 
     const content: any[] = [];
-    let lastIndex = 0;
+    let i = 0;
 
-    const patterns = [
-      { regex: /\*([^*]+)\*/g, mark: 'strong' },
-      { regex: /_([^_]+)_/g, mark: 'em' },
-      { regex: /\{\{([^}]+)\}\}/g, mark: 'code' },
-      { regex: /\[([^\]]+)\|([^\]]+)\]/g, mark: 'link' }
-    ];
-
-    const matches: Array<{ index: number; length: number; text: string; mark: string; url?: string }> = [];
-
-    patterns.forEach(pattern => {
-      const regex = new RegExp(pattern.regex.source, 'g');
-      let match;
-      while ((match = regex.exec(text)) !== null) {
-        if (pattern.mark === 'link') {
-          matches.push({
-            index: match.index,
-            length: match[0].length,
-            text: match[1],
-            mark: pattern.mark,
-            url: match[2]
+    while (i < text.length) {
+      // Check for combined bold+italic: _*text*_
+      if (text[i] === '_' && text[i + 1] === '*') {
+        const endIndex = text.indexOf('*_', i + 2);
+        if (endIndex !== -1) {
+          const innerText = text.substring(i + 2, endIndex);
+          content.push({
+            type: 'text',
+            text: innerText,
+            marks: [{ type: 'strong' }, { type: 'em' }]
           });
-        } else {
-          matches.push({
-            index: match.index,
-            length: match[0].length,
-            text: match[1],
-            mark: pattern.mark
-          });
+          i = endIndex + 2;
+          continue;
         }
       }
-    });
 
-    matches.sort((a, b) => a.index - b.index);
-
-    matches.forEach(match => {
-      if (match.index > lastIndex) {
-        content.push({ type: 'text', text: text.substring(lastIndex, match.index) });
+      // Check for bold: *text*
+      if (text[i] === '*') {
+        const endIndex = text.indexOf('*', i + 1);
+        if (endIndex !== -1 && endIndex > i + 1) {
+          const innerText = text.substring(i + 1, endIndex);
+          content.push({
+            type: 'text',
+            text: innerText,
+            marks: [{ type: 'strong' }]
+          });
+          i = endIndex + 1;
+          continue;
+        }
       }
 
-      if (match.mark === 'link') {
-        content.push({
-          type: 'text',
-          text: match.text,
-          marks: [{
-            type: 'link',
-            attrs: { href: match.url }
-          }]
-        });
+      // Check for italic: _text_
+      if (text[i] === '_') {
+        const endIndex = text.indexOf('_', i + 1);
+        if (endIndex !== -1 && endIndex > i + 1) {
+          const innerText = text.substring(i + 1, endIndex);
+          content.push({
+            type: 'text',
+            text: innerText,
+            marks: [{ type: 'em' }]
+          });
+          i = endIndex + 1;
+          continue;
+        }
+      }
+
+      // Check for strikethrough: -text-
+      if (text[i] === '-') {
+        const endIndex = text.indexOf('-', i + 1);
+        if (endIndex !== -1 && endIndex > i + 1) {
+          const innerText = text.substring(i + 1, endIndex);
+          content.push({
+            type: 'text',
+            text: innerText,
+            marks: [{ type: 'strike' }]
+          });
+          i = endIndex + 1;
+          continue;
+        }
+      }
+
+      // Check for code: {{text}}
+      if (text[i] === '{' && text[i + 1] === '{') {
+        const endIndex = text.indexOf('}}', i + 2);
+        if (endIndex !== -1) {
+          const innerText = text.substring(i + 2, endIndex);
+          content.push({
+            type: 'text',
+            text: innerText,
+            marks: [{ type: 'code' }]
+          });
+          i = endIndex + 2;
+          continue;
+        }
+      }
+
+      // Check for link: [text|url]
+      if (text[i] === '[') {
+        const endIndex = text.indexOf(']', i + 1);
+        if (endIndex !== -1) {
+          const linkContent = text.substring(i + 1, endIndex);
+          const pipeIndex = linkContent.indexOf('|');
+          if (pipeIndex !== -1) {
+            const linkText = linkContent.substring(0, pipeIndex);
+            const linkUrl = linkContent.substring(pipeIndex + 1);
+            content.push({
+              type: 'text',
+              text: linkText,
+              marks: [{
+                type: 'link',
+                attrs: { href: linkUrl }
+              }]
+            });
+            i = endIndex + 1;
+            continue;
+          }
+        }
+      }
+
+      // Regular text
+      let nextSpecial = text.length;
+      for (let j = i + 1; j < text.length; j++) {
+        if (text[j] === '*' || text[j] === '_' || text[j] === '-' || text[j] === '{' || text[j] === '[') {
+          nextSpecial = j;
+          break;
+        }
+      }
+
+      if (content.length > 0 && content[content.length - 1].marks === undefined) {
+        content[content.length - 1].text += text.substring(i, nextSpecial);
       } else {
-        content.push({
-          type: 'text',
-          text: match.text,
-          marks: [{ type: match.mark }]
-        });
+        content.push({ type: 'text', text: text.substring(i, nextSpecial) });
       }
-
-      lastIndex = match.index + match.length;
-    });
-
-    if (lastIndex < text.length) {
-      content.push({ type: 'text', text: text.substring(lastIndex) });
+      i = nextSpecial;
     }
 
     return content.length > 0 ? content : [{ type: 'text', text }];
@@ -298,6 +428,15 @@ export class FormatConverter {
           `# ${this.extractTextWithMarks(item)}`
         ).join('\n') || '';
       
+      case 'taskList':
+        return node.content?.map((item: any) => {
+          const state = item.attrs?.state || 'TODO';
+          const checkbox = state === 'DONE' ? '[x]' : '[ ]';
+          const text = this.extractText(item);
+          // Use - instead of * to avoid jira2md converting [ ] to < >
+          return `- ${checkbox} ${text}`;
+        }).join('\n') || '';
+      
       case 'codeBlock':
         const lang = node.attrs?.language || '';
         const code = this.extractText(node);
@@ -317,23 +456,34 @@ export class FormatConverter {
     if (node.type === 'text') {
       let text = node.text || '';
       if (node.marks) {
-        node.marks.forEach((mark: any) => {
-          switch (mark.type) {
-            case 'strong':
-              text = `*${text}*`;
-              break;
-            case 'em':
-              text = `_${text}_`;
-              break;
-            case 'code':
-              text = `{{${text}}}`;
-              break;
-            case 'link':
-              const href = mark.attrs?.href || '';
-              text = `[${text}|${href}]`;
-              break;
+        // Handle combined marks (e.g., strong + em)
+        const hasStrong = node.marks.some((m: any) => m.type === 'strong');
+        const hasEm = node.marks.some((m: any) => m.type === 'em');
+        const hasStrike = node.marks.some((m: any) => m.type === 'strike');
+        const hasCode = node.marks.some((m: any) => m.type === 'code');
+        const linkMark = node.marks.find((m: any) => m.type === 'link');
+
+        // Apply marks in correct order
+        if (hasCode) {
+          text = `{{${text}}}`;
+        } else {
+          if (hasStrong && hasEm) {
+            text = `_*${text}*_`;
+          } else if (hasStrong) {
+            text = `*${text}*`;
+          } else if (hasEm) {
+            text = `_${text}_`;
           }
-        });
+          
+          if (hasStrike) {
+            text = `-${text}-`;
+          }
+        }
+
+        if (linkMark) {
+          const href = linkMark.attrs?.href || '';
+          text = `[${text}|${href}]`;
+        }
       }
       return text;
     }

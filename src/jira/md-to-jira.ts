@@ -33,6 +33,99 @@ async function getMarkdownFiles(dir: string): Promise<string[]> {
 }
 
 
+async function updateIssueFromStory(
+  client: JiraProvider,
+  converter: FormatConverter,
+  issueKey: string,
+  story: JiraStory,
+  config: JiraConfig,
+  logger?: any
+): Promise<void> {
+  const jiraStatus = mapMarkdownStatusToJira(story.status, config.statusMap);
+
+  const updatePayload: any = {
+    fields: {
+      summary: story.title,
+      description: converter.markdownToADF(story.body),
+      labels: story.labels
+    }
+  };
+
+  if (logger?.debug) {
+    logger.debug(`md-to-jira: Updating issue: ${issueKey}`);
+  }
+
+  await client.updateIssue(issueKey, updatePayload);
+
+  // Update assignee if specified
+  if (story.assignees && story.assignees.length > 0) {
+    try {
+      const assigneeName = story.assignees[0];
+      if (!assigneeName || assigneeName.trim() === '') {
+        if (logger?.warn) {
+          logger.warn(`md-to-jira: Empty assignee name for ${issueKey}`);
+        }
+        return;
+      }
+
+      const userSearchUrl = `${config.jiraUrl}/rest/api/3/user/search?query=${encodeURIComponent(assigneeName)}`;
+      const userResponse = await fetch(userSearchUrl, {
+        headers: {
+          'Authorization': `Basic ${Buffer.from(`${config.email}:${config.apiToken}`).toString('base64')}`,
+          'Accept': 'application/json'
+        }
+      });
+
+      if (!userResponse.ok) {
+        throw new Error(`User search failed: ${userResponse.status} ${userResponse.statusText}`);
+      }
+
+      const users = await userResponse.json();
+
+      if (!Array.isArray(users)) {
+        throw new Error(`Invalid user search response format`);
+      }
+
+      if (users.length > 0) {
+        const user = users[0];
+        if (!user.accountId) {
+          throw new Error(`User ${assigneeName} has no accountId`);
+        }
+
+        await client.updateIssue(issueKey, {
+          fields: {
+            assignee: {
+              accountId: user.accountId
+            }
+          }
+        });
+        if (logger?.debug) {
+          logger.debug(`md-to-jira: Assigned ${issueKey} to ${user.displayName}`);
+        }
+      } else if (logger?.warn) {
+        logger.warn(`md-to-jira: Could not find user: ${assigneeName}`);
+      }
+    } catch (error) {
+      if (logger?.warn) {
+        logger.warn(`md-to-jira: Error setting assignee for ${issueKey}: ${(error as Error).message}`);
+      }
+    }
+  }
+
+  // Update status if needed
+  if (story.status && story.status !== "Backlog") {
+    const transition = await client.findTransitionByName(issueKey, jiraStatus);
+    if (transition) {
+      await client.transitionIssue(issueKey, transition.id);
+      if (logger?.debug) {
+        logger.debug(`md-to-jira: Transitioned ${issueKey} to ${jiraStatus}`);
+      }
+    } else if (logger?.warn) {
+      logger.warn(`md-to-jira: Could not find transition to ${jiraStatus} for ${issueKey}`);
+    }
+  }
+}
+
 async function createIssueFromStory(
   client: JiraProvider,
   converter: FormatConverter,
@@ -140,6 +233,10 @@ export async function mdToJira(options: MdToJiraOptions): Promise<{
   errors: string[];
 }> {
   const { jiraConfig, inputDir, dryRun = false, logger } = options;
+  
+  // Check if update mode is enabled (for testing only)
+  // By default, we only create new issues, never update existing ones
+  const allowUpdate = process.env.ALLOW_JIRA_UPDATE === 'true';
 
   if (!jiraConfig || !jiraConfig.jiraUrl || !jiraConfig.projectKey) {
     throw new Error('Invalid Jira configuration: jiraUrl and projectKey are required');
@@ -191,21 +288,63 @@ export async function mdToJira(options: MdToJiraOptions): Promise<{
 
       for (const story of stories) {
         try {
-          const escapedTitle = story.title.replace(/"/g, '\\"');
-          const jql = `project = ${jiraConfig.projectKey} AND summary ~ "${escapedTitle}"`;
-          const searchResult = await client.searchIssues(jql, 0, 1);
-
-          if (searchResult.issues && searchResult.issues.length > 0) {
-            const existingIssue = searchResult.issues[0];
-            if (existingIssue.fields.summary === story.title) {
-              skipped++;
-              if (verbose) {
-                logger?.info?.(`md-to-jira: Skipped "${story.title}" (already exists as ${existingIssue.key})`);
+          let existingIssue = null;
+          
+          // If story has a storyId (like JMST-104), try to fetch that specific issue
+          if (story.storyId && story.storyId.match(/^[A-Z]+-\d+$/)) {
+            try {
+              const issue = await client.getIssue(story.storyId, false);
+              if (issue && issue.key === story.storyId) {
+                existingIssue = issue;
+                if (verbose) {
+                  logger?.info?.(`md-to-jira: Found existing issue by ID: ${story.storyId}`);
+                }
               }
-              continue;
+            } catch (error) {
+              // Issue not found, will create new one
+              if (verbose) {
+                logger?.debug?.(`md-to-jira: Issue ${story.storyId} not found, will create new`);
+              }
+            }
+          }
+          
+          // If no storyId or issue not found by ID, search by title
+          if (!existingIssue) {
+            const escapedTitle = story.title.replace(/"/g, '\\"');
+            const jql = `project = ${jiraConfig.projectKey} AND summary ~ "${escapedTitle}"`;
+            const searchResult = await client.searchIssues(jql, 0, 10);
+
+            // Check if any result is an exact match
+            if (searchResult.issues && searchResult.issues.length > 0) {
+              existingIssue = searchResult.issues.find(issue => issue.fields.summary === story.title);
             }
           }
 
+          // If issue exists, decide whether to update or skip
+          if (existingIssue) {
+            if (allowUpdate) {
+              // Update mode enabled (for testing only)
+              if (!dryRun) {
+                await updateIssueFromStory(client, converter, existingIssue.key, story, jiraConfig, logger);
+                if (verbose) {
+                  logger?.info?.(`md-to-jira: Updated ${existingIssue.key} from ${filePath}`);
+                }
+              } else {
+                if (verbose) {
+                  logger?.info?.(`md-to-jira: [DRY RUN] Would update ${existingIssue.key}: ${story.title}`);
+                }
+              }
+            } else {
+              // Default behavior: skip existing issues
+              if (verbose) {
+                logger?.info?.(`md-to-jira: Skipped "${story.title}" (already exists as ${existingIssue.key})`);
+              }
+            }
+            skipped++;
+            continue;
+          }
+
+          // Create new issue
           if (!dryRun) {
             const issueKey = await createIssueFromStory(client, converter, story, jiraConfig, logger);
             created++;

@@ -95,34 +95,42 @@ export async function jiraToMd(options: JiraToMdOptions): Promise<{
   }
 
   let allIssues: JiraIssue[] = [];
-  let startAt = 0;
   const maxResults = 50;
+  let nextPageToken: string | undefined = undefined;
 
   while (true) {
-    const result = await client.searchIssues(searchJql, startAt, maxResults);
+    const result = await client.searchIssues(searchJql, 0, maxResults, nextPageToken);
 
-    if (!result.issues || result.issues.length === 0) {
-      break;
+    if (verbose) {
+      logger?.debug?.(`jira-to-md: API returned ${result.issues?.length || 0} issues, isLast=${result.isLast}, nextPageToken=${result.nextPageToken ? 'present' : 'none'}`);
     }
 
-    const newIssues = result.issues.filter(issue =>
-      !allIssues.some(existing => existing.key === issue.key)
-    );
-
-    if (newIssues.length === 0) {
+    if (!result.issues || result.issues.length === 0) {
       if (verbose) {
-        logger?.info?.(`jira-to-md: No new issues found, stopping pagination`);
+        logger?.info?.(`jira-to-md: No more issues returned from API`);
       }
       break;
     }
 
-    allIssues = allIssues.concat(newIssues);
+    allIssues = allIssues.concat(result.issues);
 
     if (verbose) {
-      logger?.info?.(`jira-to-md: Fetched ${newIssues.length} new issues (${allIssues.length} total)`);
+      logger?.info?.(`jira-to-md: Fetched ${result.issues.length} issues (${allIssues.length} total)`);
     }
 
-    if (result.total && allIssues.length >= result.total) {
+    // Check if this is the last page (Jira Cloud API v3)
+    if (result.isLast === true) {
+      if (verbose) {
+        logger?.info?.(`jira-to-md: Last page reached (isLast=true)`);
+      }
+      break;
+    }
+
+    // Check if there's a next page token
+    if (!result.nextPageToken) {
+      if (verbose) {
+        logger?.info?.(`jira-to-md: No nextPageToken, stopping pagination`);
+      }
       break;
     }
 
@@ -133,7 +141,7 @@ export async function jiraToMd(options: JiraToMdOptions): Promise<{
       break;
     }
 
-    startAt += maxResults;
+    nextPageToken = result.nextPageToken;
   }
 
   if (verbose) {
@@ -184,4 +192,76 @@ export async function jiraToMd(options: JiraToMdOptions): Promise<{
     files: writtenFiles,
     totalIssues: allIssues.length
   };
+}
+
+export async function jiraToMdSingleIssue(options: JiraToMdOptions & { issueKey: string }): Promise<{
+  success: boolean;
+  file?: string;
+  storyId?: string;
+  title?: string;
+  status?: string;
+  errors?: string[];
+}> {
+  const { issueKey, jiraConfig, outputDir, dryRun = false, logger } = options;
+
+  const verbose = logger?.debug || logger?.info;
+
+  try {
+    await fs.mkdir(outputDir, { recursive: true });
+
+    const client = new JiraProvider({ config: jiraConfig, logger });
+    const converter = new FormatConverter();
+
+    const jql = `key = ${issueKey}`;
+
+    if (verbose) {
+      logger?.info?.(`jiraToMdSingleIssue: Fetching issue ${issueKey}`);
+    }
+
+    const result = await client.searchIssues(jql, 0, 1);
+
+    if (!result.issues || result.issues.length === 0) {
+      if (verbose) {
+        logger?.error?.(`jiraToMdSingleIssue: Issue ${issueKey} not found`);
+      }
+      return {
+        success: false,
+        errors: [`Issue ${issueKey} not found`]
+      };
+    }
+
+    const issue = result.issues[0];
+    const story = mapIssueToStory(issue, jiraConfig, converter);
+    const md = renderSingleStoryMarkdown(story);
+    const fileName = fileNameFromStory(story);
+    const filePath = path.join(outputDir, fileName);
+
+    if (!dryRun) {
+      await fs.writeFile(filePath, md, "utf8");
+      if (verbose) {
+        logger?.info?.(`jiraToMdSingleIssue: Wrote "${filePath}" | ${story.storyId} | ${story.title} | ${story.status}`);
+      }
+    } else {
+      if (verbose) {
+        logger?.info?.(`jiraToMdSingleIssue: [DRY RUN] Would write "${filePath}" | ${story.storyId} | ${story.title} | ${story.status}`);
+      }
+    }
+
+    return {
+      success: true,
+      file: filePath,
+      storyId: story.storyId,
+      title: story.title,
+      status: story.status
+    };
+  } catch (error) {
+    const errorMessage = error instanceof Error ? error.message : String(error);
+    if (verbose) {
+      logger?.error?.(`jiraToMdSingleIssue: Error - ${errorMessage}`);
+    }
+    return {
+      success: false,
+      errors: [errorMessage]
+    };
+  }
 }

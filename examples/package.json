@@ -6,14 +6,21 @@
     "md-to-jira": "node ../dist/src/cli/md-to-jira-cli.js",
     "md-to-jira:debug": "set LOG_LEVEL=debug&& node ../dist/src/cli/md-to-jira-cli.js",
     "md-to-jira:dry-run": "set DRY_RUN=true&& node ../dist/src/cli/md-to-jira-cli.js",
+    "md-to-jira:update": "set ALLOW_JIRA_UPDATE=true&& node ../dist/src/cli/md-to-jira-cli.js",
     "jira-to-md": "node ../dist/src/cli/jira-to-md-cli.js",
     "jira-to-md:debug": "set LOG_LEVEL=debug&& node ../dist/src/cli/jira-to-md-cli.js",
     "jira-to-md:dry-run": "set DRY_RUN=true&& node ../dist/src/cli/jira-to-md-cli.js",
-    "update-assignees": "ts-node update-jira-assignees.ts",
+    "test:format": "ts-node test-format-sync.ts",
+    "test:cleanup": "ts-node test-cleanup.ts",
+    "test:run": "ts-node test-runner.ts",
     "test": "mocha -r ts-node/register \"__tests__/**/*.test.ts\"",
     "test:integration": "ts-node test-integration.ts"
   },
   "devDependencies": {
+    "@types/chai": "^4.3.11",
+    "@types/mocha": "^10.0.6",
+    "@types/node": "^20.11.0",
+    "chai": "^4.4.1",
     "mocha": "^10.4.0",
     "ts-node": "^10.9.2",
     "typescript": "^5.6.3"

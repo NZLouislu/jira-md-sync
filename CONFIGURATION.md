@@ -1,22 +1,24 @@
-# Configuration Guide - Trello MD Sync
+# Configuration Guide - Jira MD Sync
 
 ## Environment Variables
 
 ### Required Parameters
 
-These three parameters are **mandatory** for the tool to work:
+These parameters are **mandatory** for the tool to work:
 
 | Parameter | Description | How to Get |
 |-----------|-------------|------------|
-| `TRELLO_KEY` | Your Trello API key (32-character hex string) | Visit [https://trello.com/app-key](https://trello.com/app-key) |
-| `TRELLO_TOKEN` | Your Trello API token (64-character hex string or ATTA- prefixed) | Click "Token" link on the API key page |
-| `TRELLO_BOARD_ID` | Target Trello board ID (24-character alphanumeric) | Found in your board URL: `trello.com/b/BOARD_ID/board-name` |
+| `JIRA_URL` | Your Jira Cloud instance URL | Format: `https://your-domain.atlassian.net` |
+| `JIRA_EMAIL` | Your Jira account email | The email you use to log into Jira |
+| `JIRA_API_TOKEN` | Your Jira API token (ATATT-prefixed) | Visit [https://id.atlassian.com/manage-profile/security/api-tokens](https://id.atlassian.com/manage-profile/security/api-tokens) |
+| `JIRA_PROJECT_KEY` | Target Jira project key | Found in your project settings or issue keys (e.g., PROJ in PROJ-123) |
 
 **Example:**
 ```env
-TRELLO_KEY=a1b2c3d4e5f6g7h8i9j0k1l2m3n4o5p6
-TRELLO_TOKEN=ATTA1234567890abcdef1234567890abcdef1234567890abcdef1234567890ab
-TRELLO_BOARD_ID=5f4e3d2c1b0a9f8e7d6c5b4a
+JIRA_URL=https://yourcompany.atlassian.net
+JIRA_EMAIL=your.email@example.com
+JIRA_API_TOKEN=ATATT3xFfGF0abc123def456ghi789jkl012mno345pqr678stu901vwx234yz
+JIRA_PROJECT_KEY=PROJ
 ```
 
 ### Optional Parameters
@@ -25,155 +27,112 @@ TRELLO_BOARD_ID=5f4e3d2c1b0a9f8e7d6c5b4a
 
 | Parameter | Default | Description |
 |-----------|---------|-------------|
-| `PROJECT_ROOT` | Current directory | Base directory for resolving relative paths |
-| `MD_INPUT_DIR` | `trello` | Input directory for markdown files (relative to PROJECT_ROOT) |
-| `MD_OUTPUT_DIR` | `trello` | Output directory for generated files (relative to PROJECT_ROOT) |
+| `MD_INPUT_DIR` | `./jira` | Input directory for markdown files |
+| `MD_OUTPUT_DIR` | `./jira` | Output directory for generated markdown files |
 
-#### Trello List Mapping
-
-| Parameter | Default | Description |
-|-----------|---------|-------------|
-| `TRELLO_LIST_MAP_JSON` | Built-in mapping | JSON object mapping status names to Trello list names |
-
-**Default mapping:**
-```json
-{
-  "backlog": "Backlog",
-  "ready": "Ready",
-  "doing": "Doing",
-  "in progress": "Doing",
-  "in review": "In review",
-  "review": "In review",
-  "done": "Done",
-  "todo": "Backlog"
-}
-```
-
-**Custom mapping example:**
-```env
-TRELLO_LIST_MAP_JSON={"backlog":"📋 Backlog","doing":"🚀 In Progress","done":"✅ Done"}
-```
-
-#### Label Configuration
+#### Jira Issue Configuration
 
 | Parameter | Default | Description |
 |-----------|---------|-------------|
-| `MDSYNC_ENSURE_LABELS` | `0` (false) | Automatically create missing labels in Trello |
-| `REQUIRED_LABELS` | None | Comma-separated list of labels to pre-create |
-| `PRIORITY_LABEL_MAP_JSON` | None | Map priority values to label names |
-| `LABEL_TOKEN_MAP_JSON` | None | Map tokens in content to label names |
+| `JIRA_ISSUE_TYPE_ID` | `10001` | Issue type ID for creating issues (Story, Task, Bug, etc.) |
+| `JIRA_JQL` | `project = {PROJECT_KEY} ORDER BY key ASC` | Custom JQL query for filtering issues |
 
 **Example:**
 ```env
-MDSYNC_ENSURE_LABELS=1
-REQUIRED_LABELS=bug,feature,enhancement,documentation
-PRIORITY_LABEL_MAP_JSON={"p1":"Priority: High","p2":"Priority: Medium","p3":"Priority: Low"}
-LABEL_TOKEN_MAP_JSON={"bug":"Type: Bug","feat":"Type: Feature","chore":"Type: Chore"}
+JIRA_ISSUE_TYPE_ID=10001
+JIRA_JQL=project = PROJ AND status IN ('In Progress', 'In Review') ORDER BY created DESC
+```
+
+#### Status Mapping
+
+Built-in status mapping with aliases:
+
+| Input Status | Normalized Status |
+|--------------|-------------------|
+| `Backlog`, `To Do`, `Ready` | `Backlog` |
+| `In Progress`, `In progress` | `In Progress` |
+| `In Review`, `In review` | `In Review` |
+| `Done` | `Done` |
+| Any other | `Backlog` (default) |
+
+#### Label Configuration
+
+Labels in markdown files are automatically synced to Jira. No special configuration needed.
+
+**Example in markdown:**
+```markdown
+Labels: [frontend, ui, high-priority]
 ```
 
 #### Member Configuration
 
-| Parameter | Default | Description |
-|-----------|---------|-------------|
-| `MEMBER_ALIAS_MAP_JSON` | None | Map friendly names to Trello usernames |
+Assignees and reporters are synced using Jira account IDs or usernames.
 
-**Example:**
-```env
-MEMBER_ALIAS_MAP_JSON={"backend":"john.doe","frontend":"jane.smith","qa":"bob.tester"}
+**Example in markdown:**
+```markdown
+Assignees: jane.smith
+Reporter: john.doe
 ```
 
 #### Filtering Options
 
-| Parameter | Default | Description |
-|-----------|---------|-------------|
-| `TRELLO_FILTER_LIST` | None | Filter cards by list name (exact match) |
-| `TRELLO_FILTER_LABEL` | None | Filter cards by label (exact match) |
-| `TRELLO_FILTER_STORYID` | None | Filter by specific story ID |
+Use `JIRA_JQL` to filter issues during export:
 
-#### Logging & Debugging
+**Example:**
+```env
+# Filter by status
+JIRA_JQL=project = PROJ AND status = 'In Progress'
 
-| Parameter | Default | Description |
-|-----------|---------|-------------|
-| `LOG_LEVEL` | `info` | Log level: `info` or `debug` |
-| `LOG_JSON` | `0` (false) | Output logs in JSON format |
-| `VERBOSE` | `0` (false) | Enable verbose output |
+# Filter by assignee
+JIRA_JQL=project = PROJ AND assignee = currentUser()
+
+# Filter by labels
+JIRA_JQL=project = PROJ AND labels IN (frontend, backend)
+
+# Filter by date range
+JIRA_JQL=project = PROJ AND created >= -30d
+
+# Complex filter
+JIRA_JQL=project = PROJ AND status IN ('In Progress', 'In Review') AND assignee = currentUser() ORDER BY priority DESC
+```
 
 #### Runtime Behavior
 
 | Parameter | Default | Description |
 |-----------|---------|-------------|
-| `MDSYNC_DRY_RUN` | `0` (false) | Preview changes without making them |
-| `MDSYNC_STRICT_STATUS` | `0` (false) | Fail if status doesn't match list mapping |
-| `MDSYNC_WRITE_LOCAL` | `0` (false) | Write changes back to local markdown files |
-| `CHECKLIST_NAME` | `Todos` | Name for Trello checklists |
+| `DRY_RUN` | `false` | Preview changes without executing API writes |
 
 ## Complete .env Template
 
 ```env
 # ====================================
-# REQUIRED: Trello API Configuration
+# REQUIRED: Jira API Configuration
 # ====================================
-# Get your API key and token from https://trello.com/app-key
-TRELLO_KEY=your_trello_api_key_here
-TRELLO_TOKEN=your_trello_token_here
-TRELLO_BOARD_ID=your_board_id_here
+# Get your API token from https://id.atlassian.com/manage-profile/security/api-tokens
+JIRA_URL=https://your-domain.atlassian.net
+JIRA_EMAIL=your.email@example.com
+JIRA_API_TOKEN=ATATT3xFfGF0abc123def456ghi789jkl012mno345pqr678stu901vwx234yz
+JIRA_PROJECT_KEY=PROJ
 
 # ====================================
 # OPTIONAL: Directory Configuration
 # ====================================
-PROJECT_ROOT=./
-MD_INPUT_DIR=./stories
-MD_OUTPUT_DIR=./output
+MD_INPUT_DIR=./md
+MD_OUTPUT_DIR=./jira
 
 # ====================================
-# OPTIONAL: Trello List Mapping
+# OPTIONAL: Jira Issue Configuration
 # ====================================
-# Map your workflow states to Trello list names
-TRELLO_LIST_MAP_JSON={"backlog":"Backlog","ready":"Ready","doing":"In Progress","review":"Code Review","done":"Done"}
+# Issue type ID (10001=Story, 10002=Task, 10003=Bug, etc.)
+JIRA_ISSUE_TYPE_ID=10001
 
-# ====================================
-# OPTIONAL: Checklist Configuration
-# ====================================
-CHECKLIST_NAME=Tasks
-
-# ====================================
-# OPTIONAL: Label Configuration
-# ====================================
-# Automatically create missing labels
-MDSYNC_ENSURE_LABELS=1
-# Required labels (comma-separated)
-REQUIRED_LABELS=bug,feature,enhancement
-# Map priority values to label names
-PRIORITY_LABEL_MAP_JSON={"high":"Priority: High","medium":"Priority: Medium","low":"Priority: Low"}
-# Map tokens to label names
-LABEL_TOKEN_MAP_JSON={"bug":"Type: Bug","feat":"Type: Feature"}
-
-# ====================================
-# OPTIONAL: Member Configuration
-# ====================================
-# Map team member aliases to Trello usernames
-MEMBER_ALIAS_MAP_JSON={"john":"john.doe","jane":"jane.smith"}
-
-# ====================================
-# OPTIONAL: Filtering Options
-# ====================================
-TRELLO_FILTER_LIST=
-TRELLO_FILTER_LABEL=
-TRELLO_FILTER_STORYID=
-
-# ====================================
-# OPTIONAL: Logging & Debugging
-# ====================================
-LOG_LEVEL=info
-LOG_JSON=0
-VERBOSE=0
+# Custom JQL query for filtering issues
+JIRA_JQL=project = PROJ ORDER BY key ASC
 
 # ====================================
 # OPTIONAL: Runtime Behavior
 # ====================================
-MDSYNC_DRY_RUN=0
-MDSYNC_STRICT_STATUS=0
-MDSYNC_WRITE_LOCAL=0
+DRY_RUN=false
 ```
 
 ## Common Use Cases
@@ -185,27 +144,28 @@ MDSYNC_WRITE_LOCAL=0
 npm run validate
 
 # 2. Preview what will be created (dry-run)
-npm run md -- stories/sprint-1.md --dry-run
+npm run md-to-jira -- stories/sprint-1.md --dry-run
 
-# 3. Import stories to Trello
-npm run md -- stories/sprint-1.md
+# 3. Import stories to Jira
+npm run md-to-jira -- stories/sprint-1.md
 
-# 4. Export updated stories from Trello
-npm run trello
+# 4. Export all issues from Jira
+npm run jira-to-md
+
+# 5. Export a single issue
+npm run jira-to-md -- PROJ-123
 ```
 
 ### Team Collaboration
 
 ```env
-# Configure team member aliases
-MEMBER_ALIAS_MAP_JSON={"john":"john.doe","jane":"jane.smith","bob":"bob.wilson"}
+# Configure Jira project
+JIRA_PROJECT_KEY=TEAM
+JIRA_ISSUE_TYPE_ID=10001
 
-# Automatically create labels
-MDSYNC_ENSURE_LABELS=1
-REQUIRED_LABELS=bug,feature,enhancement,documentation
-
-# Map priorities to labels
-PRIORITY_LABEL_MAP_JSON={"high":"Priority: High","medium":"Priority: Medium","low":"Priority: Low"}
+# Set input/output directories
+MD_INPUT_DIR=./md
+MD_OUTPUT_DIR=./jira
 ```
 
 ### CI/CD Integration
@@ -215,209 +175,167 @@ PRIORITY_LABEL_MAP_JSON={"high":"Priority: High","medium":"Priority: Medium","lo
 npm run validate || exit 1
 
 # Dry-run to check for issues
-npm run md -- stories/*.md --dry-run
+npm run md-to-jira -- stories/*.md --dry-run
 
-# Import with strict status checking
-MDSYNC_STRICT_STATUS=1 npm run md -- stories/*.md
+# Import stories
+npm run md-to-jira -- stories/*.md
 ```
 
 ### Filtering Exports
 
 ```bash
-# Export only stories from specific list
-TRELLO_FILTER_LIST="In Progress" npm run trello
+# Export only in-progress issues
+JIRA_JQL="project = PROJ AND status = 'In Progress'" npm run jira-to-md
 
-# Export only stories with specific label
-TRELLO_FILTER_LABEL="bug" npm run trello
+# Export issues assigned to current user
+JIRA_JQL="project = PROJ AND assignee = currentUser()" npm run jira-to-md
 
-# Export single story
-npm run trello -- Story-1234
-```# Configuration Guide
+# Export recent issues
+JIRA_JQL="project = PROJ AND created >= -7d" npm run jira-to-md
 
-## Environment Variables
-
-### Basic Configuration
-
-```bash
-TRELLO_KEY=your_trello_api_key
-TRELLO_TOKEN=your_trello_token
-TRELLO_BOARD_ID=your_board_id
-```
-
-### Directory Configuration
-
-```bash
-MD_INPUT_DIR=examples/md
-MD_OUTPUT_DIR=examples/items
-CHECKLIST_NAME=Todos
-```
-
-### List Mapping
-
-Map markdown status names to Trello list names:
-
-```bash
-TRELLO_LIST_MAP_JSON={"backlog":"Backlog","ready":"Ready","doing":"Doing","done":"Done"}
-```
-
-### Label Management
-
-#### Auto-create Missing Labels
-
-Enable automatic label creation:
-
-```bash
-MDSYNC_ENSURE_LABELS=1
-```
-
-#### Required Labels
-
-Comma-separated list of labels to ensure exist on the board:
-
-```bash
-REQUIRED_LABELS=sync,trello,parser,provider,importer,exporter,tests,ci,docs,cli,examples
-```
-
-#### Priority Label Mapping
-
-Map priority values in markdown to Trello label names:
-
-```bash
-PRIORITY_LABEL_MAP_JSON={"p1":"Priority: High","p2":"Priority: Medium","p3":"Priority: Low"}
-```
-
-**How it works:**
-- In markdown: `Priority: p1`
-- Syncs to Trello as label: `Priority: High`
-- When exporting from Trello, `Priority: High` label converts back to `Priority: p1` in markdown
-
-**Setup Steps:**
-1. Create labels in Trello: "Priority: High", "Priority: Medium", "Priority: Low"
-2. Set the mapping in `.env`
-3. Use `Priority: p1` in your markdown files
-4. Run `npm run md` to sync
-
-### Member Alias Mapping
-
-Map markdown assignee aliases to actual Trello usernames:
-
-```bash
-MEMBER_ALIAS_MAP_JSON={"backend":"john_doe","qa":"jane_smith","devops":"bob_wilson","docs":"alice_brown"}
-```
-
-**How it works:**
-- In markdown: `Assignees: [backend, qa]`
-- Syncs to Trello as members: `john_doe`, `jane_smith`
-- When exporting from Trello, members convert back to aliases in markdown
-
-**Setup Steps:**
-1. Find your Trello usernames (visible in member profile URLs)
-2. Create alias mappings in `.env`
-3. Use aliases in your markdown files
-4. Run `npm run md` to sync
-
-### Other Options
-
-```bash
-LOG_LEVEL=info
-MDSYNC_DRY_RUN=0
-MDSYNC_STRICT_STATUS=0
-MDSYNC_WRITE_LOCAL=0
+# Export single issue
+npm run jira-to-md -- PROJ-456
 ```
 
 ## Complete Example
 
 Create a `.env` file in the project root:
 
-```bash
-TRELLO_KEY=abc123def456
-TRELLO_TOKEN=xyz789uvw012
-TRELLO_BOARD_ID=5f8a1b2c3d4e5f6g
-TRELLO_LIST_MAP_JSON={"backlog":"Backlog","ready":"Ready","doing":"Doing","review":"Code Review","done":"Done"}
+```env
+# Jira Configuration
+JIRA_URL=https://yourcompany.atlassian.net
+JIRA_EMAIL=your.email@example.com
+JIRA_API_TOKEN=ATATT3xFfGF0abc123def456ghi789jkl012mno345pqr678stu901vwx234yz
+JIRA_PROJECT_KEY=PROJ
+JIRA_ISSUE_TYPE_ID=10001
 
-MD_INPUT_DIR=examples/md
-MD_OUTPUT_DIR=examples/items
-CHECKLIST_NAME=Todos
+# Directory Configuration
+MD_INPUT_DIR=./md
+MD_OUTPUT_DIR=./jira
 
-MDSYNC_ENSURE_LABELS=1
-REQUIRED_LABELS=sync,trello,parser,provider,importer,exporter,tests,ci,docs,cli,examples
-
-PRIORITY_LABEL_MAP_JSON={"p1":"Priority: High","p2":"Priority: Medium","p3":"Priority: Low"}
-
-MEMBER_ALIAS_MAP_JSON={"backend":"john_doe","qa":"jane_smith","devops":"bob_wilson","docs":"alice_brown"}
-
-LOG_LEVEL=info
-MDSYNC_DRY_RUN=0
+# Optional: Custom JQL
+JIRA_JQL=project = PROJ ORDER BY key ASC
 ```
 
 ## Markdown Format
 
-### Story with Priority, Labels, and Assignees
+### Multi-Story Format (for Import)
 
 ```markdown
 ## Backlog
 
-- Story: STORY-1101 Refine Parser
-  description: Improve markdown parsing
-  priority: p1
-  labels: sync, trello, parser
-  assignees: backend, qa
-  acceptance_criteria:
-  - [ ] Parse multi-story files
-  - [ ] Handle edge cases
+- Story: PROJ-101 User Authentication
+  Story ID: PROJ-101
+  Description:
+    Implement JWT-based authentication for the API.
+    
+    **Acceptance Criteria:**
+    - [ ] Create login endpoint
+    - [ ] Implement token refresh
+    - [ ] Add logout functionality
+  Priority: High
+  Labels: [backend, security]
+  Assignees: john.doe
+  Reporter: jane.smith
+
+## In Progress
+
+- Story: PROJ-102 Database Migration
+  Story ID: PROJ-102
+  Description:
+    Migrate from MySQL to PostgreSQL.
+    
+    **Acceptance Criteria:**
+    - [x] Export existing data
+    - [ ] Create PostgreSQL schema
+    - [ ] Import and verify data
+  Priority: High
+  Labels: [backend, database]
+  Assignees: jane.smith
 ```
 
-This will sync to Trello with:
-- Label: "Priority: High" (from p1 mapping)
-- Labels: "sync", "trello", "parser"
-- Members: john_doe, jane_smith (from backend, qa aliases)
+### Single-Story Format (from Export)
+
+```markdown
+## Story: PROJ-123 Implement User Authentication
+
+### Story ID
+
+PROJ-123
+
+### Status
+
+In Progress
+
+### Description
+
+Implement JWT-based authentication for the API.
+
+**Acceptance Criteria:**
+- [x] Create login endpoint
+- [ ] Implement token refresh
+- [ ] Add logout functionality
+
+### Priority
+
+High
+
+### Labels
+
+backend, security, authentication
+
+### Assignees
+
+john.doe, jane.smith
+
+### Reporter
+
+john.doe
+```
 
 ## Troubleshooting
 
-### Labels not syncing to Trello
+### Authentication Errors
 
-**Problem:** Warnings like `[warn] missing labels for STORY-1101: sync, trello, parser`
-
-**Solution:**
-1. Set `MDSYNC_ENSURE_LABELS=1` in `.env`
-2. Add labels to `REQUIRED_LABELS`
-3. Run `npm run md` again
-
-### Members not syncing to Trello
-
-**Problem:** Warnings like `[warn] missing members for STORY-1101: backend`
+**Problem:** `HTTP 401 Unauthorized` or `HTTP 403 Forbidden`
 
 **Solution:**
-1. Find actual Trello usernames (check member profile URLs)
-2. Add mappings to `MEMBER_ALIAS_MAP_JSON`
-3. Example: `{"backend":"john_doe"}`
-4. Run `npm run md` again
+1. Verify `JIRA_URL` includes `https://` (e.g., `https://yourcompany.atlassian.net`)
+2. Check `JIRA_EMAIL` matches your Jira account
+3. Generate a new API token at: https://id.atlassian.com/manage-profile/security/api-tokens
+4. Verify you have "Create Issues" permission in the project
 
-### Priority not showing in Trello
+### Format Issues
 
-**Problem:** Priority field in markdown doesn't create labels in Trello
-
-**Solution:**
-1. Create priority labels in Trello manually first: "Priority: High", "Priority: Medium", "Priority: Low"
-2. Set `PRIORITY_LABEL_MAP_JSON` in `.env`
-3. Set `MDSYNC_ENSURE_LABELS=1`
-4. Run `npm run md` again
-
-### Members/Labels not exporting from Trello
-
-**Problem:** Trello cards have members and labels, but they don't appear in exported markdown
+**Problem:** Checkboxes not interactive in Jira
 
 **Solution:**
-1. Ensure `PRIORITY_LABEL_MAP_JSON` and `MEMBER_ALIAS_MAP_JSON` are set in `.env`
-2. Run `npm run trello` to re-export
-3. Check the exported markdown files in `examples/items/`
+1. Ensure checkbox format is `- [ ]` (with spaces)
+2. Update to latest version: `npm install jira-md-sync@latest`
+3. Re-import the markdown file
+
+### Missing Content
+
+**Problem:** Description or acceptance criteria not showing in Jira
+
+**Solution:**
+1. Verify markdown syntax is correct
+2. Use `--dry-run` to preview the conversion
+3. Check that `Description:` section is properly indented
+
+### Issue Already Exists
+
+**Problem:** "Issue already exists" warning during import
+
+**Solution:**
+This is expected behavior (create-only mode). The tool skips existing issues to prevent overwrites. Use unique Story IDs for new issues.
 
 ## Testing Configuration
 
 Test your configuration with dry-run mode:
 
 ```bash
-MDSYNC_DRY_RUN=1 npm run md
+npm run md-to-jira -- stories/test.md --dry-run
 ```
 
-This will show what would be synced without making actual changes.
+This will show what would be created without executing API writes.

@@ -5,23 +5,35 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [0.1.0] - 2025-01-04
+## [0.1.0] - 2025-10-10
 
 ### Added
 
 #### Core Features
-- Create-only import: Multi-Story Markdown → Trello board items by Story ID
-- Read-only export: Trello board → Single-Story Markdown files
-- Status mapping with aliases (Backlog, Ready, In progress, In review, Done)
+- Create-only import: Multi-Story Markdown → Jira Cloud issues by Story ID
+- Read-only export: Jira Cloud issues → Single-Story Markdown files
+- Interactive checkboxes: Acceptance Criteria as clickable task lists in Jira
+- Unlimited pagination: Export all issues using Jira Cloud API v3
+- Status mapping with aliases (Backlog, To Do, Ready, In Progress, In Review, Done)
 - Deterministic, idempotent behavior keyed by Story ID
-- Dry-run mode with structured logs for CI gates
+- Dry-run mode with structured logs for CI gates and preview
+
+#### Format Support
+- Rich text formatting: Headers (H1-H6), bold, italic, strikethrough
+- Code blocks with syntax highlighting
+- Lists: ordered, unordered, nested
+- Interactive checkboxes for task tracking
+- Links, blockquotes, tables, emoji support
+- Atlassian Document Format (ADF) conversion pipeline
+- High-fidelity Markdown ↔ Jira Wiki ↔ ADF conversion
 
 #### Configuration & Validation
 - Comprehensive configuration validation with clear error messages
-- Format validation for API keys, tokens, and board IDs
-- Trello API connectivity testing
+- Format validation for Jira URL, email, API tokens, and project keys
+- Jira Cloud API connectivity testing
 - Directory management with automatic creation and permission validation
-- CLI validation command (`validate-config`)
+- CLI validation command (`validate-jira-config`)
+- Environment variable configuration support
 
 #### Advanced Features
 - Enhanced error handling with recovery recommendations
@@ -32,46 +44,50 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Label management with automatic creation
 - Priority mapping to labels
 - Member alias support for team assignments
-- Flexible filtering by list, label, or story ID
+- Custom JQL query support for flexible filtering
+- Single-issue export capability
 
 #### CLI Commands
-- `md-to-trello` - Import markdown files to Trello
-- `trello-to-md` - Export Trello cards to markdown
-- `validate-config` - Validate configuration and test API connection
+- `md-to-jira` - Import Multi-Story markdown files to Jira (create-only)
+- `jira-to-md` - Export all Jira issues to Single-Story markdown files
+- `jira-sync` - Bidirectional sync between Jira and markdown
+- `validate-jira-config` - Validate configuration and test Jira API connection
 
 #### Developer Experience
 - Full TypeScript support with type definitions
-- Comprehensive documentation
+- Comprehensive documentation with examples
 - Runnable examples in `examples/` directory
 - Detailed troubleshooting guide
 - Multiple configuration options
+- Programmatic API for library usage
 
 ### Features
 
 - TypeScript API with full type definitions
-- Three CLI commands with help documentation
-- Dry-run mode for previewing changes
+- Four CLI commands with help documentation
+- Dry-run mode for previewing changes without API writes
 - Status mapping with customizable aliases
 - Idempotent operations keyed by Story ID
-- Checklist synchronization
+- Interactive checklist synchronization
 - Label and member management
 - Priority-based labeling
-- Configurable list mapping
+- Custom JQL query support
 - Environment variable configuration
-- JSON and text output formats
-- Verbose logging mode
-- Strict status validation option
-- Write-back to local files option
+- Structured logging with custom logger support
+- Single-issue and bulk export modes
+- GitHub Actions workflow examples
 
 ### Documentation
 
 - Comprehensive README with quick start guide
 - Detailed configuration parameter reference
+- Story file format specifications (Multi-Story and Single-Story)
 - Common use cases and examples
-- Troubleshooting guide with 7 common issues
+- Troubleshooting guide with authentication and format issues
 - API reference documentation
-- How to get Trello credentials guide
-- Story file format specifications
+- How to get Jira API token guide
+- Format conversion pipeline documentation
+- GitHub Actions integration examples
 
 ### Technical
 
@@ -81,5 +97,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - npm package with proper exports
 - Source maps for debugging
 - Declaration maps for IDE support
+- Mocha test framework with NYC coverage
+- Dependencies: jira-client, jira2md, unified/remark ecosystem
 
-[0.1.0]: https://github.com/nzlouislu/trello-md-sync/releases/tag/v0.1.0
+[0.1.0]: https://github.com/nzlouislu/jira-md-sync/releases/tag/v0.1.0

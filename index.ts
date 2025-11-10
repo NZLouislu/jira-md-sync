@@ -1,4 +1,4 @@
-export { jiraToMd } from "./src/jira/jira-to-md";
+export { jiraToMd, jiraToMdSingleIssue } from "./src/jira/jira-to-md";
 export { mdToJira } from "./src/jira/md-to-jira";
 export { JiraProvider } from "./src/jira/provider";
 export type { 

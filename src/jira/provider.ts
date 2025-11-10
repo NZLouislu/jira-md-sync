@@ -98,7 +98,7 @@ export class JiraProvider {
     return value;
   }
 
-  async searchIssues(jql: string, startAt: number = 0, maxResults: number = 50): Promise<JiraSearchResult> {
+  async searchIssues(jql: string, _startAt: number = 0, maxResults: number = 50, nextPageToken?: string): Promise<JiraSearchResult> {
     const fields = [
       'summary',
       'description',
@@ -114,14 +114,20 @@ export class JiraProvider {
       'updated'
     ];
 
-    const params = new URLSearchParams({
+    const params: Record<string, string> = {
       jql,
-      startAt: startAt.toString(),
       maxResults: maxResults.toString(),
       fields: fields.join(',')
-    });
+    };
 
-    return this.request(`/search/jql?${params.toString()}`, {
+    // Use nextPageToken for pagination if provided (Jira Cloud API v3)
+    if (nextPageToken) {
+      params.nextPageToken = nextPageToken;
+    }
+
+    const queryString = new URLSearchParams(params).toString();
+
+    return this.request(`/search/jql?${queryString}`, {
       method: 'GET'
     });
   }
