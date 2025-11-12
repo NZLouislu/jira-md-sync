@@ -33,7 +33,7 @@ This is a plain code block
 without language specification
 ```
 
-**Acceptance Criteria:**
+### Acceptance Criteria
 
 - [ ] JavaScript code block renders correctly
 - [ ] Python code block renders correctly

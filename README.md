@@ -10,6 +10,11 @@ Bidirectional sync between Jira Cloud and Markdown files. Manage Jira issues as 
 
 ## Features
 
+✅ **Batch Story Management**
+- **Input**: Multiple stories in one markdown file
+- **Output**: One file per Jira issue
+- Organize stories by feature, sprint, or category
+
 ✅ **One-Way Sync**
 - Import: Markdown → Jira (create-only, safe)
 - Export: Jira → Markdown (backup/documentation)
@@ -43,35 +48,81 @@ npm install -D typescript ts-node @types/node
 
 ```
 your-project/
+├── jiramd/                    # Input: Source markdown files (edit here)
+│   └── multi-story.md        # ⭐ One file with MULTIPLE stories
+├── jira/                      # Output: Synced from Jira (auto-generated)
+│   ├── JMS-1-story.md        # One file per issue
+│   ├── JMS-2-story.md
+│   └── JMS-3-story.md
 ├── src/
 │   └── jira/
-│       ├── md-to-jira.ts      # Import script
-│       ├── jira-to-md.ts      # Export script
-│       └── md/                # Markdown files
-│           └── stories.md
-├── jira-exports/              # Exported files (gitignore)
+│       ├── md-to-jira.ts     # Import script
+│       └── jira-to-md.ts     # Export script
 ├── .env                       # Jira credentials
 ├── .env.example              # Template
+├── .gitignore                # Ignore jira/ directory
 ├── package.json
 └── tsconfig.json
 ```
+
+**Directory Explanation:**
+
+📝 **`jiramd/multi-story.md`** - Your source file (manually edited)
+  - **One file contains MULTIPLE stories** organized by status sections
+  - Example: 10 stories in Backlog, 5 in Progress → all in one file
+  - Commit to Git for version control
+  - This is your "source of truth" for local edits
+  - You can create multiple files if needed (e.g., `features.md`, `bugs.md`)
+  
+📦 **`jira/`** - Synced cache from Jira (auto-generated)
+  - **One file per Jira issue** (split from your multi-story file)
+  - Example: `multi-story.md` with 15 stories → creates 15 separate files
+  - Add to `.gitignore` (regenerated from Jira)
+  - Used for comparison and verification
+
+**Input vs Output:**
+
+| Input (`jiramd/multi-story.md`) | Output (`jira/`) |
+|----------------------------------|------------------|
+| 1 file = Multiple stories | 1 file = 1 issue |
+| Organized by status sections | Organized by Jira key |
+| `## Backlog`<br>`- Story: A`<br>`- Story: B`<br>`- Story: C` | `JMS-1-story-a.md`<br>`JMS-2-story-b.md`<br>`JMS-3-story-c.md` |
+
+**Why Separate Directories?**
+- ✅ **Safety**: Source files never get overwritten
+- ✅ **Clarity**: Easy to see what's local vs. synced
+- ✅ **Flexibility**: Compare differences before merging
+- ✅ **Git-friendly**: Only commit source files
+- ✅ **Batch editing**: Edit multiple stories in one file, upload all at once
 
 ### 2. Environment Setup
 
 Create `.env`:
 
 ```env
+# Jira Connection
 JIRA_URL=https://your-domain.atlassian.net
 JIRA_EMAIL=your-email@example.com
 JIRA_API_TOKEN=your-api-token
 JIRA_PROJECT_KEY=PROJ
 JIRA_ISSUE_TYPE_ID=10001
 
+# Directory Configuration (Optional)
+# Input: Where you edit markdown files (default: jiramd)
+MD_INPUT_DIR=jiramd
+
+# Output: Where Jira exports go (default: jira)
+MD_OUTPUT_DIR=jira
+
 # Optional: Custom status mapping (JSON format)
 # Maps your markdown status names to Jira status names
 # If not set, uses default mapping: Backlog→Backlog, In Progress→In Progress, etc.
 # STATUS_MAP={"To Do":"Backlog","Code Review":"In Review","Closed":"Done"}
 ```
+
+**Directory Configuration:**
+- If not set, uses defaults: `jiramd/` (input), `jira/` (output)
+- Can be overridden via environment variables or command line
 
 Get API token: https://id.atlassian.com/manage-profile/security/api-tokens
 
@@ -111,6 +162,11 @@ import { mdToJira } from 'jira-md-sync';
 dotenv.config();
 
 async function main() {
+  // Input directory: where you edit markdown files
+  // Priority: CLI arg > MD_INPUT_DIR > default (jiramd)
+  const inputDir = process.env.MD_INPUT_DIR || 
+                   path.join(process.cwd(), 'jiramd');
+
   const result = await mdToJira({
     jiraConfig: {
       jiraUrl: process.env.JIRA_URL!,
@@ -119,7 +175,7 @@ async function main() {
       projectKey: process.env.JIRA_PROJECT_KEY!,
       issueTypeId: process.env.JIRA_ISSUE_TYPE_ID
     },
-    inputDir: path.join(__dirname, 'md'),
+    inputDir,
     dryRun: process.env.DRY_RUN === 'true',
     logger: console
   });
@@ -138,7 +194,14 @@ main().catch(console.error);
 
 **Run:**
 ```bash
+# Use default directory (jiramd/)
 npm run md-to-jira
+
+# Use custom directory
+MD_INPUT_DIR=custom/path npm run md-to-jira
+
+# Dry run (preview without creating)
+DRY_RUN=true npm run md-to-jira
 ```
 
 ### Export Script (src/jira/jira-to-md.ts)
@@ -155,7 +218,16 @@ dotenv.config();
 async function main() {
   const args = process.argv.slice(2);
   const issueKey = args[0];
-  const outputDir = args[1] || path.join(__dirname, '../jira-exports');
+  
+  // Output directory: where Jira exports go
+  // Priority: CLI arg > MD_OUTPUT_DIR > default (jira)
+  const outputDir = args[1] || 
+                    process.env.MD_OUTPUT_DIR || 
+                    path.join(process.cwd(), 'jira');
+
+  // Input directory: for preserving labels order
+  const inputDir = process.env.MD_INPUT_DIR || 
+                   path.join(process.cwd(), 'jiramd');
 
   let jql = process.env.JIRA_JQL;
   
@@ -175,6 +247,7 @@ async function main() {
       projectKey: process.env.JIRA_PROJECT_KEY!
     },
     outputDir,
+    inputDir,  // For preserving labels order
     jql,
     logger: console
   });
@@ -187,7 +260,7 @@ main().catch(console.error);
 
 **Run:**
 ```bash
-# Export all issues
+# Export all issues (to jira/ directory)
 npm run jira-to-md
 
 # Export single issue
@@ -195,9 +268,58 @@ npm run jira-to-md -- PROJ-123
 
 # Export to custom directory
 npm run jira-to-md -- PROJ-123 ./custom-output
+
+# Use custom output directory via env
+MD_OUTPUT_DIR=exports npm run jira-to-md
 ```
 
 ## Configuration
+
+### Directory Configuration
+
+The tool uses separate directories for input (source) and output (cache):
+
+**Default Directories:**
+- Input: `jiramd/` - Your markdown source files
+- Output: `jira/` - Synced from Jira (cache)
+
+**Configuration Methods:**
+
+1. **Environment Variables** (Recommended)
+```env
+MD_INPUT_DIR=jiramd
+MD_OUTPUT_DIR=jira
+```
+
+2. **Command Line Arguments**
+```bash
+# Custom input directory
+MD_INPUT_DIR=custom/input npm run md-to-jira
+
+# Custom output directory
+MD_OUTPUT_DIR=custom/output npm run jira-to-md
+```
+
+3. **Programmatic**
+```typescript
+await mdToJira({
+  jiraConfig: { /* ... */ },
+  inputDir: './custom/input',
+  // ...
+});
+
+await jiraToMd({
+  jiraConfig: { /* ... */ },
+  outputDir: './custom/output',
+  inputDir: './custom/input',  // For preserving labels order
+  // ...
+});
+```
+
+**Priority Order:**
+1. Command line argument (highest)
+2. Environment variable (`MD_INPUT_DIR`, `MD_OUTPUT_DIR`)
+3. Default value (`jiramd`, `jira`)
 
 ### Environment Variables
 
@@ -208,6 +330,8 @@ npm run jira-to-md -- PROJ-123 ./custom-output
 | `JIRA_API_TOKEN` | Yes | API token for authentication | - |
 | `JIRA_PROJECT_KEY` | Yes | Jira project key (e.g., PROJ) | - |
 | `JIRA_ISSUE_TYPE_ID` | No | Issue type ID for creating issues | `10001` |
+| `MD_INPUT_DIR` | No | Input directory (source markdown files) | `jiramd` |
+| `MD_OUTPUT_DIR` | No | Output directory (Jira exports) | `jira` |
 | `STATUS_MAP` | No | Custom status mapping (JSON format) | See below |
 | `DRY_RUN` | No | Set to "true" for dry run mode | `false` |
 
@@ -263,11 +387,108 @@ Acceptance_Criteria:
 - ☑ Add unit tests (checked)
 - ☐ Update documentation (clickable)
 
+## Input vs Output Files
+
+### Key Differences
+
+| Aspect | Input Files (`jiramd/`) | Output Files (`jira/`) |
+|--------|------------------------|------------------------|
+| **Purpose** | Source files for editing | Sync cache from Jira |
+| **File Structure** | Multiple stories per file | One file per issue |
+| **Naming** | Your choice (e.g., `features.md`) | Auto-generated (`JMS-1-title.md`) |
+| **Story ID** | No Story ID needed | Includes Jira key (JMS-1) |
+| **Git** | ✅ Commit to version control | ❌ Add to `.gitignore` |
+| **Editing** | ✅ Edit freely | ❌ Read-only (regenerated) |
+| **Organization** | By feature/sprint/category | By Jira issue |
+
+### Example Workflow
+
+```bash
+# 1. Create/edit ONE source file with MULTIPLE stories
+$ cat jiramd/multi-story.md
+## Backlog
+- Story: Feature A
+  Description: ...
+- Story: Feature B
+  Description: ...
+- Story: Feature C
+  Description: ...
+
+## In Progress
+- Story: Feature D
+  Description: ...
+- Story: Feature E
+  Description: ...
+
+# Total: 5 stories in 1 file
+
+# 2. Upload to Jira (creates 5 separate issues)
+$ npm run md-to-jira
+md-to-jira: Created "Feature A" as JMS-1
+md-to-jira: Created "Feature B" as JMS-2
+md-to-jira: Created "Feature C" as JMS-3
+md-to-jira: Created "Feature D" as JMS-4
+md-to-jira: Created "Feature E" as JMS-5
+✅ Created: 5 issues from 1 file
+
+# 3. Export from Jira (creates 5 separate files)
+$ npm run jira-to-md
+✅ Exported 5 files
+
+# 4. Check output (one file per issue)
+$ ls jira/
+JMS-1-feature-a.md
+JMS-2-feature-b.md
+JMS-3-feature-c.md
+JMS-4-feature-d.md
+JMS-5-feature-e.md
+
+# 5. Compare if needed
+$ diff jiramd/multi-story.md jira/JMS-1-feature-a.md
+# Shows differences between your source and Jira's version
+```
+
+**Visual Representation:**
+
+```
+Input (jiramd/)                    Jira Cloud                Output (jira/)
+┌─────────────────────┐           ┌──────────┐              ┌─────────────────┐
+│ multi-story.md      │           │          │              │ JMS-1-story.md  │
+│                     │  upload   │  Jira    │  download    │                 │
+│ - Story A           │ ────────> │  Issues  │ ───────────> │ JMS-2-story.md  │
+│ - Story B           │           │          │              │                 │
+│ - Story C           │           │          │              │ JMS-3-story.md  │
+│ - Story D           │           │          │              │                 │
+│ - Story E           │           │          │              │ ...             │
+│                     │           │          │              │                 │
+│ (1 file,            │           │ (5       │              │ (5 files,       │
+│  5 stories)         │           │  issues) │              │  1 per issue)   │
+└─────────────────────┘           └──────────┘              └─────────────────┘
+```
+
+### .gitignore Recommendation
+
+```gitignore
+# Ignore Jira sync cache (regenerated from Jira)
+jira/
+
+# Commit source files
+!jiramd/
+```
+
 ## Markdown Format
 
-### Input Format (src/jira/md/stories.md)
+### Input Format (jiramd/multi-story.md)
 
-Create markdown files with multiple stories:
+**⭐ Key Concept:** Input files contain **MULTIPLE stories in a SINGLE file**. This is the main difference from output files.
+
+**Example:** One `multi-story.md` file can contain:
+- 10 stories in Backlog section
+- 5 stories in In Progress section  
+- 3 stories in Done section
+- **Total: 18 stories in 1 file** → Creates 18 separate Jira issues
+
+Create a markdown file with multiple stories organized by status sections:
 
 ```markdown
 ## Backlog
@@ -308,6 +529,11 @@ Create markdown files with multiple stories:
 - ⚠️ **Do not include Story ID** (e.g., `PROJ-123`) in markdown
 - Jira automatically generates Story IDs sequentially (PROJ-1, PROJ-2, etc.)
 - This tool is **create-only** - use Jira UI for updates and refinements
+- 📝 **Multiple stories per file** - Organize stories by feature, sprint, or category
+- 📁 **File organization** - Create multiple files in `jiramd/` directory:
+  - `jiramd/features.md` - Feature stories
+  - `jiramd/bugs.md` - Bug fixes
+  - `jiramd/sprint-1.md` - Sprint-specific stories
 
 **Status Sections:**
 - `Backlog`, `To Do`, `Ready` → Backlog
@@ -316,6 +542,8 @@ Create markdown files with multiple stories:
 - `Done` → Done
 
 ### Output Format (Exported from Jira)
+
+**Important:** Output files are **one file per Jira issue**. Each issue is exported to a separate file in the `jira/` directory with the format `{KEY}-{title}.md`.
 
 Each issue exports to a separate file:
 
@@ -405,7 +633,23 @@ Some formats may not survive round-trip perfectly:
 **Common Issues:**
 - "No stories found": Check markdown format (`- Story:` prefix required)
 - "Issue already exists": Expected (create-only mode)
+- "Input directory not found": Check `JIRA_INPUT_DIR` or create `jiramd/` directory
 - Checkboxes not interactive: Use `- [ ]` format with spaces
+- Labels order changed: Tool now preserves original order from input files
+
+**Directory Issues:**
+```bash
+# Check current configuration
+$ node -e "console.log('Input:', process.env.MD_INPUT_DIR || 'jiramd'); console.log('Output:', process.env.MD_OUTPUT_DIR || 'jira')"
+
+# Create default directories
+$ mkdir -p jiramd jira
+
+# Verify directory structure
+$ ls -la
+drwxr-xr-x  jiramd/    # Your source files
+drwxr-xr-x  jira/      # Jira sync cache
+```
 
 **Debug:**
 ```bash

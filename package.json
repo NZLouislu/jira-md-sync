@@ -1,6 +1,7 @@
 {
   "name": "jira-md-sync",
   "version": "0.1.0",
+  "type": "commonjs",
   "description": "A tool to sync Jira issues with local markdown files",
   "main": "dist/index.js",
   "module": "dist/index.js",

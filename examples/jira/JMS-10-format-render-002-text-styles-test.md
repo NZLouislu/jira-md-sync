@@ -15,7 +15,7 @@ You can also use ~~strikethrough~~ for deleted text.
 
 Inline code like `const x = 10;` should be monospaced.
 
-**Acceptance Criteria:**
+### Acceptance Criteria
 
 - [ ] Bold text renders correctly
 - [ ] Italic text renders correctly

@@ -15,7 +15,7 @@ Template strings in code blocks are corrupted during conversion. Backticks are r
 console.log({{Hello, ${name}!}});
 ```
 
-**Acceptance Criteria:**
+### Acceptance Criteria
 
 - [ ] Template strings preserve backticks
 - [ ] Code blocks maintain exact content

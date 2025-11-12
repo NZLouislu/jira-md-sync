@@ -30,7 +30,7 @@ const comparison = (a < b) && (c > d);
 * Underscore: \*not italic\*
 * Backtick: \`not code\`
 
-**Acceptance Criteria:**
+### Acceptance Criteria
 
 - [ ] Special characters display correctly
 - [ ] HTML entities are handled properly

@@ -38,7 +38,7 @@ Testing unordered and ordered lists with nesting.
 * Item with **bold**
 * Item with [link](https://example.com)
 
-**Acceptance Criteria:**
+### Acceptance Criteria
 
 - [ ] Unordered lists render correctly
 - [ ] Ordered lists render correctly

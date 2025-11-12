@@ -34,7 +34,7 @@ Long and complex descriptions are truncated during sync. Significant content is 
 * No content should be lost during conversion
 * Complex formatting should be fully preserved
 
-**Acceptance Criteria:**
+### Acceptance Criteria
 
 - [ ] All sections are synced to Jira
 - [ ] No content truncation occurs

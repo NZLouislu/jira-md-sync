@@ -70,7 +70,7 @@ Testing complex combinations of multiple formats in one story.
 
   - [ ] Backup is created
 
-**Acceptance Criteria:**
+### Acceptance Criteria
 
 - [ ] All headers render correctly
 - [ ] Lists with inline code work

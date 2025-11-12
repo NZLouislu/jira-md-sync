@@ -25,7 +25,7 @@ Mixed bold and italic formatting is corrupted during Markdown to Jira to Markdow
 * ***text*_ should remain _*text*** after round-trip
 * Or convert to alternative format that renders correctly
 
-**Acceptance Criteria:**
+### Acceptance Criteria
 
 - [ ] Bold and italic combination converts correctly
 - [ ] Round-trip conversion preserves formatting

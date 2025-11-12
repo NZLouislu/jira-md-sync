@@ -27,7 +27,7 @@ Priority field is not being synced from Markdown to Jira. All issues are created
 * Map markdown priority values to Jira priority IDs
 * Handle priority field in updateIssueFromStory as well
 
-**Acceptance Criteria:**
+### Acceptance Criteria
 
 - [ ] Priority field is included in create issue payload
 - [ ] Priority mapping works for all standard values

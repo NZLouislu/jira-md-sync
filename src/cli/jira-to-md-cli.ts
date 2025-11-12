@@ -1,16 +1,21 @@
 import dotenv from "dotenv";
 import path from "path";
 import { existsSync } from "fs";
+import { promises as fs } from "fs";
 import { jiraToMd } from "../jira/jira-to-md";
 import { validateJiraConfig } from "../utils/config-validator";
 import { handleCommonErrors } from "../utils/error-handler";
+import { getOutputDir, getInputDir } from "../config/defaults";
 import type { JiraConfig } from "../jira/types";
+
+// Use __dirname for CommonJS compatibility
+const currentDir = __dirname;
 
 function loadEnv(): void {
   const candidates = [
     path.resolve(process.cwd(), ".env"),
-    path.resolve(__dirname, "../../../.env"),
-    path.resolve(__dirname, "../../.env")
+    path.resolve(currentDir, "../../../.env"),
+    path.resolve(currentDir, "../../.env")
   ];
 
   for (const envPath of candidates) {
@@ -37,7 +42,8 @@ export async function jiraToMdCli(): Promise<void> {
   const apiToken = process.env.JIRA_API_TOKEN || "";
   const projectKey = process.env.JIRA_PROJECT_KEY || "";
 
-  const outputDirEnv = customOutputDir || (process.env.MD_OUTPUT_DIR || "./jira").trim();
+  // Priority: CLI arg > MD_OUTPUT_DIR > default (jira)
+  const outputDirEnv = customOutputDir || getOutputDir();
 
   // Resolve path: if absolute, use as-is; if relative, resolve from project root
   let outputDir: string;
@@ -45,7 +51,7 @@ export async function jiraToMdCli(): Promise<void> {
     outputDir = outputDirEnv;
   } else {
     // Find project root (where .env is located)
-    const projectRoot = path.resolve(__dirname, "../../../");
+    const projectRoot = path.resolve(currentDir, "../../../");
     outputDir = path.resolve(projectRoot, outputDirEnv);
   }
 
@@ -100,9 +106,28 @@ export async function jiraToMdCli(): Promise<void> {
     error: (...args: any[]) => console.error(...args)
   };
 
+  // Try to find input directory for preserving labels order
+  // Priority: MD_INPUT_DIR > default (jiramd)
+  const inputDirEnv = getInputDir();
+  let inputDir: string | undefined;
+
+  if (inputDirEnv) {
+    const resolvedInputDir = path.isAbsolute(inputDirEnv)
+      ? inputDirEnv
+      : path.resolve(currentDir, "../../../", inputDirEnv);
+
+    try {
+      await fs.access(resolvedInputDir);
+      inputDir = resolvedInputDir;
+    } catch {
+      // Input directory doesn't exist, that's okay
+    }
+  }
+
   const result = await jiraToMd({
     jiraConfig,
     outputDir,
+    inputDir,
     jql: jql || undefined,
     dryRun,
     logger

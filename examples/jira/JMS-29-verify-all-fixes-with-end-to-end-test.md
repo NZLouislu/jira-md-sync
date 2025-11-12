@@ -55,7 +55,7 @@ Run complete end-to-end verification of all fixes using the test-format-renderin
 * Add troubleshooting guide
 * Update examples
 
-**Acceptance Criteria:**
+### Acceptance Criteria
 
 - [ ] All test issues sync correctly to Jira
 - [ ] Round-trip conversion is lossless

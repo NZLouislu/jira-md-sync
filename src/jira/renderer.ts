@@ -21,16 +21,59 @@ export function renderSingleStoryMarkdown(s: JiraStory): string {
   lines.push("### Status");
   lines.push(s.status || "Backlog");
   lines.push("");
-  lines.push("### Description");
-  lines.push(s.body || "");
-  lines.push("");
+
   const hasTodos = s.todos && s.todos.length > 0;
-  if (hasTodos) {
-    lines.push("### Acceptance Criteria");
-    for (const t of s.todos) {
-      lines.push(`- [${t.done ? "x" : " "}] ${t.text}`);
-    }
+  let bodyText = s.body || "";
+  let acceptanceCriteriaText = "";
+
+  // Check if body contains Acceptance Criteria section
+  // Match both formats: **Acceptance Criteria:** and Acceptance_Criteria:
+  const acceptanceCriteriaMatch = bodyText.match(/(\*\*Acceptance Criteria:\*\*|Acceptance_Criteria:)([\s\S]*)$/i);
+
+  if (acceptanceCriteriaMatch) {
+    // Split body and acceptance criteria
+    const cleanBody = bodyText.substring(0, acceptanceCriteriaMatch.index).trim();
+    acceptanceCriteriaText = acceptanceCriteriaMatch[2].trim();
+
+    lines.push("### Description");
+    lines.push(cleanBody);
     lines.push("");
+
+    // Render Acceptance Criteria as a separate section
+    if (acceptanceCriteriaText || hasTodos) {
+      lines.push("### Acceptance Criteria");
+      lines.push("");
+
+      // If we have text from description, render it
+      if (acceptanceCriteriaText) {
+        lines.push(acceptanceCriteriaText);
+        if (hasTodos) lines.push(""); // Add spacing if we also have todos
+      }
+
+      // If we have todos (subtasks), render them
+      if (hasTodos) {
+        for (const t of s.todos) {
+          lines.push(`- [${t.done ? "x" : " "}] ${t.text}`);
+        }
+      }
+
+      lines.push("");
+    }
+  } else {
+    // No Acceptance Criteria in body
+    lines.push("### Description");
+    lines.push(bodyText);
+    lines.push("");
+
+    // Render todos as separate Acceptance Criteria section if present
+    if (hasTodos) {
+      lines.push("### Acceptance Criteria");
+      lines.push("");
+      for (const t of s.todos) {
+        lines.push(`- [${t.done ? "x" : " "}] ${t.text}`);
+      }
+      lines.push("");
+    }
   }
   const priorityLabel = typeof s.meta?.priorityLabel === "string" ? s.meta.priorityLabel.trim() : "";
   const priorityValue = typeof s.meta?.priority === "string" ? s.meta.priority.trim() : "";

@@ -27,7 +27,7 @@ Strikethrough markdown is incorrectly converted to HTML sub tags instead of prop
 * Verify jira2md strikethrough handling
 * Test FormatConverter strikethrough conversion
 
-**Acceptance Criteria:**
+### Acceptance Criteria
 
 - [ ] Strikethrough converts to correct ADF format
 - [ ] Strikethrough renders correctly in Jira

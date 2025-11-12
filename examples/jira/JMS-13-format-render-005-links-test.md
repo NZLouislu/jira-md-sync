@@ -24,7 +24,7 @@ Testing different types of links.
 
 Visit [our website](https://example.com) for more information.
 
-**Acceptance Criteria:**
+### Acceptance Criteria
 
 - [ ] Named links work correctly
 - [ ] Auto links work correctly

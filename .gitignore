@@ -13,6 +13,19 @@ yarn-error.log*
 # Environment variables
 .env
 
+# Jira sync cache (regenerated from Jira)
+# Only commit source files in jiramd/
+jira/
+trello/
+github/
+notion/
+.sync/
+.kiro/
+
+# Legacy sync directories
+md/
+jira-exports/
+
 # IDE/editor settings
 .vscode/
 .idea/

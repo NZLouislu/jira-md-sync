@@ -156,6 +156,7 @@ export interface JiraUpdateIssuePayload {
 export interface JiraToMdOptions {
   jiraConfig: JiraConfig;
   outputDir: string;
+  inputDir?: string; // Optional: directory with original markdown files to preserve labels order
   jql?: string;
   dryRun?: boolean;
   logger?: any;

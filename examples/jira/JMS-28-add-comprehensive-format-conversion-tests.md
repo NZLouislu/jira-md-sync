@@ -33,7 +33,7 @@ Create automated tests to verify all formatting conversions work correctly for r
 * Compare input vs output
 * Validate Jira API responses
 
-**Acceptance Criteria:**
+### Acceptance Criteria
 
 - [ ] All format types have tests
 - [ ] Round-trip tests pass

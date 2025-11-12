@@ -11,7 +11,7 @@ async function main() {
     issueTypeId: process.env.JIRA_ISSUE_TYPE_ID || "10001"
   };
 
-  const inputDir = process.env.MD_INPUT_DIR || "./md";
+  const inputDir = process.env.MD_INPUT_DIR || "./jiramd";
 
   const logger = {
     info: (...args: any[]) => console.log(...args),

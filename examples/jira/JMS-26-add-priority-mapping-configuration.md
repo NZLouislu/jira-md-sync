@@ -30,7 +30,7 @@ Implement configurable priority mapping between Markdown and Jira priority syste
 * Support environment variable configuration
 * Allow custom priority mappings
 
-**Acceptance Criteria:**
+### Acceptance Criteria
 
 - [ ] Priority mapping is configurable
 - [ ] Default mapping works for standard priorities

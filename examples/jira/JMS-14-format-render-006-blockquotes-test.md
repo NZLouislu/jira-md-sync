@@ -21,7 +21,7 @@ Normal paragraph after quote.
 
 > Another blockquote with **bold** and *italic* text.
 
-**Acceptance Criteria:**
+### Acceptance Criteria
 
 - [ ] Blockquotes render correctly
 - [ ] Multi-line blockquotes work

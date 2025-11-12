@@ -6,8 +6,45 @@ import { FormatConverter } from "./format-converter";
 import { renderSingleStoryMarkdown } from "./renderer";
 import { normalizeJiraStatus } from "./status-normalizer";
 import { storyFileName } from "./story-format";
+import { parseMarkdownToStories } from "./markdown-parser";
 import type { JiraConfig, JiraIssue, JiraStory, JiraTodo, JiraToMdOptions } from "./types";
 
+
+/**
+ * Try to read original labels order from markdown file
+ */
+async function getOriginalLabelsOrder(inputDir: string | undefined, storyId: string, title: string): Promise<string[] | null> {
+  if (!inputDir) return null;
+
+  try {
+    // Try to find the markdown file in the input directory
+    const files = await fs.readdir(inputDir);
+
+    for (const file of files) {
+      if (!file.endsWith('.md')) continue;
+
+      const filePath = path.join(inputDir, file);
+      const content = await fs.readFile(filePath, 'utf8');
+
+      // Parse the markdown file
+      const stories = parseMarkdownToStories(content);
+
+      // Find the story by ID or title
+      const story = stories.find(s =>
+        (s.storyId && s.storyId === storyId) ||
+        (s.title && s.title === title)
+      );
+
+      if (story && story.labels && story.labels.length > 0) {
+        return story.labels;
+      }
+    }
+  } catch (error) {
+    // Silently fail - we'll use Jira's order if we can't read the original
+  }
+
+  return null;
+}
 
 function mapIssueToStory(issue: JiraIssue, config: JiraConfig, converter: FormatConverter): JiraStory {
   const storyId = issue.key;
@@ -79,7 +116,7 @@ export async function jiraToMd(options: JiraToMdOptions): Promise<{
   files: { file: string; storyId: string; title: string; status: string }[];
   totalIssues: number;
 }> {
-  const { jiraConfig, outputDir, jql, dryRun = false, logger } = options;
+  const { jiraConfig, outputDir, inputDir, jql, dryRun = false, logger } = options;
 
   const verbose = logger?.debug || logger?.info;
 
@@ -153,6 +190,34 @@ export async function jiraToMd(options: JiraToMdOptions): Promise<{
 
   for (const issue of allIssues) {
     const story = mapIssueToStory(issue, jiraConfig, converter);
+
+    // Try to restore original labels order from input markdown files
+    if (inputDir) {
+      const originalLabels = await getOriginalLabelsOrder(inputDir, story.storyId, story.title);
+      if (originalLabels) {
+        // Reorder story.labels to match original order
+        // Keep any new labels from Jira at the end
+        const jiraLabels = story.labels;
+        const reorderedLabels: string[] = [];
+
+        // Add labels in original order
+        for (const label of originalLabels) {
+          if (jiraLabels.includes(label)) {
+            reorderedLabels.push(label);
+          }
+        }
+
+        // Add any new labels from Jira that weren't in original
+        for (const label of jiraLabels) {
+          if (!reorderedLabels.includes(label)) {
+            reorderedLabels.push(label);
+          }
+        }
+
+        story.labels = reorderedLabels;
+      }
+    }
+
     const md = renderSingleStoryMarkdown(story);
     const fileName = fileNameFromStory(story);
     const filePath = path.join(outputDir, fileName);

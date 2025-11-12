@@ -28,7 +28,7 @@ Escaped characters are incorrectly converted. Underscores become asterisks durin
 * Review jira2md escape processing
 * Test all escape sequences
 
-**Acceptance Criteria:**
+### Acceptance Criteria
 
 - [ ] Escaped underscores are preserved
 - [ ] Escaped asterisks are preserved

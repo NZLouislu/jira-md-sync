@@ -26,7 +26,7 @@ Testing table formatting.
 |**Bold**|*Italic*|`Code`|
 |[Link](https://example.com)|-Strike-|Normal|
 
-**Acceptance Criteria:**
+### Acceptance Criteria
 
 - [ ] Simple table renders correctly
 - [ ] Table headers are bold

@@ -32,7 +32,7 @@ Testing emoji and unicode character support.
 
 🚀 Deployment in progress...
 
-**Acceptance Criteria:**
+### Acceptance Criteria
 
 - [ ] Emojis render correctly
 - [ ] Unicode characters display properly

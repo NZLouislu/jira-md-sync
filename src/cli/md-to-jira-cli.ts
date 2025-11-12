@@ -4,13 +4,17 @@ import { existsSync, statSync } from "fs";
 import { mdToJira } from "../jira/md-to-jira";
 import { validateJiraConfig } from "../utils/config-validator";
 import { handleCommonErrors } from "../utils/error-handler";
+import { getInputDir } from "../config/defaults";
 import type { JiraConfig } from "../jira/types";
+
+// Use __dirname for CommonJS compatibility
+const currentDir = __dirname;
 
 function loadEnv(): void {
   const candidates = [
     path.resolve(process.cwd(), ".env"),
-    path.resolve(__dirname, "../../../.env"),
-    path.resolve(__dirname, "../../.env")
+    path.resolve(currentDir, "../../../.env"),
+    path.resolve(currentDir, "../../.env")
   ];
 
   for (const envPath of candidates) {
@@ -37,7 +41,8 @@ export async function mdToJiraCli(): Promise<void> {
   const projectKey = process.env.JIRA_PROJECT_KEY || "";
   const issueTypeId = process.env.JIRA_ISSUE_TYPE_ID;
 
-  const inputDir = customInputDir || (process.env.MD_INPUT_DIR || "./md").trim();
+  // Priority: CLI arg > MD_INPUT_DIR > default (jiramd)
+  const inputDir = customInputDir || getInputDir();
 
   // Resolve path: if absolute, use as-is; if relative, resolve from project root
   let resolvedInputDir: string;
@@ -45,7 +50,7 @@ export async function mdToJiraCli(): Promise<void> {
     resolvedInputDir = inputDir;
   } else {
     // Find project root (where .env is located)
-    const projectRoot = path.resolve(__dirname, "../../../");
+    const projectRoot = path.resolve(currentDir, "../../../");
     resolvedInputDir = path.resolve(projectRoot, inputDir);
 
     // Fallback: if not found in project root, try from cwd (for backward compatibility)

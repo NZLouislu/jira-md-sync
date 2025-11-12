@@ -30,7 +30,7 @@ Add better error handling and logging for ADF conversion failures to help diagno
 * Warn on content truncation
 * Report unsupported features
 
-**Acceptance Criteria:**
+### Acceptance Criteria
 
 - [ ] Conversion errors are logged with details
 - [ ] Failed content is identified

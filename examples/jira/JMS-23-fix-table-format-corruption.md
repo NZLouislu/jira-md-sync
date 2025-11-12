@@ -27,7 +27,7 @@ Tables are broken into separate single-row tables instead of maintaining proper 
 * Check table row and cell conversion
 * Verify jira2md table rendering
 
-**Acceptance Criteria:**
+### Acceptance Criteria
 
 - [ ] Tables maintain proper structure
 - [ ] All rows are in single table
