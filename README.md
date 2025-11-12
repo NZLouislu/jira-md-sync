@@ -6,7 +6,32 @@
 
 Bidirectional sync between Jira Cloud and Markdown files. Manage Jira issues as text files with full format support.
 
+## How It Works
+
+**Markdown → Jira (Import)**
+```
+┌─────────────────┐         ┌──────────────────┐         ┌─────────────────┐
+│  Markdown File  │  ────>  │    npm run       │  ────>  │   Jira Issues   │
+│                 │         │   md-to-jira     │         │                 │
+│  - Story A      │         │                  │         │  ✓ PROJ-1       │
+│  - Story B      │         │  ✓ Created 5     │         │  ✓ PROJ-2       │
+│  - Story C      │         │  ✓ Skipped 2     │         │  ✓ PROJ-3       │
+└─────────────────┘         └──────────────────┘         └─────────────────┘
+```
+
+**Jira → Markdown (Export)**
+```
+┌─────────────────┐         ┌──────────────────┐         ┌─────────────────┐
+│   Jira Issues   │  ────>  │    npm run       │  ────>  │ Markdown Files  │
+│                 │         │   jira-to-md     │         │                 │
+│  ✓ PROJ-1       │         │                  │         │  PROJ-1.md      │
+│  ✓ PROJ-2       │         │  ✓ Exported 5    │         │  PROJ-2.md      │
+│  ✓ PROJ-3       │         │                  │         │  PROJ-3.md      │
+└─────────────────┘         └──────────────────┘         └─────────────────┘
+```
+## See It In Action
 ![Markdown Example](https://cdn.jsdelivr.net/gh/NZLouislu/jira-md-sync@main/images/jira-md-sync.png)
+*Left: Write stories in Markdown | Right: See them in Jira*
 
 ## Features
 
@@ -51,9 +76,9 @@ your-project/
 ├── jiramd/                    # Input: Source markdown files (edit here)
 │   └── multi-story.md        # ⭐ One file with MULTIPLE stories
 ├── jira/                      # Output: Synced from Jira (auto-generated)
-│   ├── JMS-1-story.md        # One file per issue
-│   ├── JMS-2-story.md
-│   └── JMS-3-story.md
+│   ├── PROJ-1-story.md        # One file per issue
+│   ├── PROJ-2-story.md
+│   └── PROJ-3-story.md
 ├── src/
 │   └── jira/
 │       ├── md-to-jira.ts     # Import script
@@ -86,7 +111,7 @@ your-project/
 |----------------------------------|------------------|
 | 1 file = Multiple stories | 1 file = 1 issue |
 | Organized by status sections | Organized by Jira key |
-| `## Backlog`<br>`- Story: A`<br>`- Story: B`<br>`- Story: C` | `JMS-1-story-a.md`<br>`JMS-2-story-b.md`<br>`JMS-3-story-c.md` |
+| `## Backlog`<br>`- Story: A`<br>`- Story: B`<br>`- Story: C` | `PROJ-1-story-a.md`<br>`PROJ-2-story-b.md`<br>`PROJ-3-story-c.md` |
 
 **Why Separate Directories?**
 - ✅ **Safety**: Source files never get overwritten
@@ -176,7 +201,7 @@ async function main() {
       issueTypeId: process.env.JIRA_ISSUE_TYPE_ID
     },
     inputDir,
-    dryRun: process.env.DRY_RUN === 'true',
+    dryRun: false,  // Set to true to preview without creating issues
     logger: console
   });
 
@@ -194,14 +219,44 @@ main().catch(console.error);
 
 **Run:**
 ```bash
-# Use default directory (jiramd/)
+# Create issues in Jira
 npm run md-to-jira
+```
 
-# Use custom directory
+**Use Custom Directory:**
+Set in `.env` file (recommended, works on all platforms):
+```env
+MD_INPUT_DIR=custom/path
+```
+
+Or use environment variable:
+```bash
+# Linux/macOS
 MD_INPUT_DIR=custom/path npm run md-to-jira
 
-# Dry run (preview without creating)
+# Windows PowerShell
+$env:MD_INPUT_DIR='custom/path'; npm run md-to-jira
+
+# Windows CMD
+set MD_INPUT_DIR=custom/path&& npm run md-to-jira
+```
+
+**Dry Run Mode:**
+Set in `.env` file (recommended):
+```env
+DRY_RUN=true
+```
+
+Or use environment variable:
+```bash
+# Linux/macOS
 DRY_RUN=true npm run md-to-jira
+
+# Windows PowerShell
+$env:DRY_RUN='true'; npm run md-to-jira
+
+# Windows CMD
+set DRY_RUN=true&& npm run md-to-jira
 ```
 
 ### Export Script (src/jira/jira-to-md.ts)
@@ -265,12 +320,24 @@ npm run jira-to-md
 
 # Export single issue
 npm run jira-to-md -- PROJ-123
+```
 
-# Export to custom directory
-npm run jira-to-md -- PROJ-123 ./custom-output
+**Use Custom Output Directory:**
+Set in `.env` file (recommended, works on all platforms):
+```env
+MD_OUTPUT_DIR=exports
+```
 
-# Use custom output directory via env
+Or use environment variable:
+```bash
+# Linux/macOS
 MD_OUTPUT_DIR=exports npm run jira-to-md
+
+# Windows PowerShell
+$env:MD_OUTPUT_DIR='exports'; npm run jira-to-md
+
+# Windows CMD
+set MD_OUTPUT_DIR=exports&& npm run jira-to-md
 ```
 
 ## Configuration
@@ -285,19 +352,30 @@ The tool uses separate directories for input (source) and output (cache):
 
 **Configuration Methods:**
 
-1. **Environment Variables** (Recommended)
+1. **Environment Variables in .env File** (Recommended - works on all platforms)
 ```env
 MD_INPUT_DIR=jiramd
 MD_OUTPUT_DIR=jira
 ```
 
-2. **Command Line Arguments**
-```bash
-# Custom input directory
-MD_INPUT_DIR=custom/input npm run md-to-jira
+2. **Command Line Environment Variables**
 
-# Custom output directory
+Linux/macOS:
+```bash
+MD_INPUT_DIR=custom/input npm run md-to-jira
 MD_OUTPUT_DIR=custom/output npm run jira-to-md
+```
+
+Windows PowerShell:
+```powershell
+$env:MD_INPUT_DIR='custom/input'; npm run md-to-jira
+$env:MD_OUTPUT_DIR='custom/output'; npm run jira-to-md
+```
+
+Windows CMD:
+```cmd
+set MD_INPUT_DIR=custom/input&& npm run md-to-jira
+set MD_OUTPUT_DIR=custom/output&& npm run jira-to-md
 ```
 
 3. **Programmatic**
@@ -448,34 +526,6 @@ $ diff jiramd/multi-story.md jira/JMS-1-feature-a.md
 # Shows differences between your source and Jira's version
 ```
 
-**Visual Representation:**
-
-```
-Input (jiramd/)                    Jira Cloud                Output (jira/)
-┌─────────────────────┐           ┌──────────┐              ┌─────────────────┐
-│ multi-story.md      │           │          │              │ JMS-1-story.md  │
-│                     │  upload   │  Jira    │  download    │                 │
-│ - Story A           │ ────────> │  Issues  │ ───────────> │ JMS-2-story.md  │
-│ - Story B           │           │          │              │                 │
-│ - Story C           │           │          │              │ JMS-3-story.md  │
-│ - Story D           │           │          │              │                 │
-│ - Story E           │           │          │              │ ...             │
-│                     │           │          │              │                 │
-│ (1 file,            │           │ (5       │              │ (5 files,       │
-│  5 stories)         │           │  issues) │              │  1 per issue)   │
-└─────────────────────┘           └──────────┘              └─────────────────┘
-```
-
-### .gitignore Recommendation
-
-```gitignore
-# Ignore Jira sync cache (regenerated from Jira)
-jira/
-
-# Commit source files
-!jiramd/
-```
-
 ## Markdown Format
 
 ### Input Format (jiramd/multi-story.md)
@@ -578,13 +628,31 @@ Bob Wilson
 
 ## Dry Run Mode
 
-Preview changes before executing:
+Preview changes before executing.
 
-```bash
-DRY_RUN=true npm run md-to-jira
+**Method 1: Set in .env file (recommended)**
+```env
+DRY_RUN=true
 ```
 
-Or in code:
+Then run:
+```bash
+npm run md-to-jira
+```
+
+**Method 2: Command line environment variable**
+```bash
+# Linux/macOS
+DRY_RUN=true npm run md-to-jira
+
+# Windows PowerShell
+$env:DRY_RUN='true'; npm run md-to-jira
+
+# Windows CMD
+set DRY_RUN=true&& npm run md-to-jira
+```
+
+**Method 3: Set in code**
 ```typescript
 const result = await mdToJira({
   jiraConfig,
@@ -652,8 +720,22 @@ drwxr-xr-x  jira/      # Jira sync cache
 ```
 
 **Debug:**
+
+Set in `.env` file:
+```env
+DRY_RUN=true
+```
+
+Or use command line:
 ```bash
-DRY_RUN=true npm run md-to-jira  # Preview without changes
+# Linux/macOS
+DRY_RUN=true npm run md-to-jira
+
+# Windows PowerShell
+$env:DRY_RUN='true'; npm run md-to-jira
+
+# Windows CMD
+set DRY_RUN=true&& npm run md-to-jira
 ```
 
 ## Feedback
