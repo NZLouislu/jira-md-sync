@@ -97,34 +97,6 @@ Add to `package.json`:
 }
 ```
 
-### 4. Create Your First Story
-
-Create `src/jira/md/stories.md`:
-
-```markdown
-## Backlog
-
-- Story: Setup Project Infrastructure
-  Description:
-    Initialize the project with basic configuration.
-    
-    **Acceptance Criteria:**
-    - [ ] Setup repository
-    - [ ] Configure CI/CD
-  Priority: High
-  Labels: [setup, infrastructure]
-```
-
-**Note:** Don't include Story ID (like `PROJ-123`) - Jira will auto-generate it.
-
-### 5. Run Import
-
-```bash
-npm run md-to-jira
-```
-
-Jira will create the issue and assign it an ID (e.g., `PROJ-1`).
-
 ## Usage
 
 ### Import Script (src/jira/md-to-jira.ts)
@@ -280,7 +252,7 @@ Acceptance Criteria are converted to **interactive checkboxes** in Jira. Users c
 
 **Markdown:**
 ```markdown
-**Acceptance Criteria:**
+Acceptance_Criteria:
 - [ ] Implement login endpoint
 - [x] Add unit tests
 - [ ] Update documentation
@@ -304,25 +276,25 @@ Create markdown files with multiple stories:
   Description:
     Create a user profile page with editable fields.
     
-    **Acceptance Criteria:**
+    Acceptance_Criteria:
     - [ ] Design profile layout
     - [ ] Implement edit functionality
     - [ ] Add avatar upload
   Priority: High
   Labels: [frontend, ui]
-  Assignees: Jane Smith
-  Reporter: John Doe
+  Assignees: Alice Chen
+  Reporter: Bob Wilson
 
 - Story: Database Migration
   Description:
     Migrate from MySQL to PostgreSQL.
     
-    **Acceptance Criteria:**
+    Acceptance_Criteria:
     - [ ] Export existing data
     - [ ] Create PostgreSQL schema
   Priority: Medium
   Labels: [backend, database]
-  Assignees: John Doe
+  Assignees: David Lee
 
 ## In Progress
 
@@ -359,7 +331,7 @@ In Progress
 ### Description
 Implement JWT-based authentication for the API.
 
-**Acceptance Criteria:**
+Acceptance_Criteria:
 - [x] Create login endpoint
 - [ ] Implement token refresh
 
@@ -370,10 +342,10 @@ High
 backend, security, authentication
 
 ### Assignees
-John Doe
+Alice Chen
 
 ### Reporter
-John Doe
+Bob Wilson
 ```
 
 ## Dry Run Mode
