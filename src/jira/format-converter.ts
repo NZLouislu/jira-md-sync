@@ -54,6 +54,7 @@ export class FormatConverter {
     const content: any[] = [];
     let currentList: any = null;
     let currentCodeBlock: any = null;
+    let currentTable: any = null;
 
     for (let i = 0; i < lines.length; i++) {
       const line = lines[i];
@@ -69,6 +70,14 @@ export class FormatConverter {
       }
 
       if (line.startsWith('{code')) {
+        if (currentList) {
+          content.push(currentList);
+          currentList = null;
+        }
+        if (currentTable) {
+          content.push(currentTable);
+          currentTable = null;
+        }
         const langMatch = line.match(/\{code:([^}]+)\}/);
         currentCodeBlock = {
           type: 'codeBlock',
@@ -76,6 +85,42 @@ export class FormatConverter {
           content: [{ type: 'text', text: '' }]
         };
         continue;
+      }
+
+      if (line.startsWith('||') || line.startsWith('|')) {
+        if (currentList) {
+          content.push(currentList);
+          currentList = null;
+        }
+        
+        const isHeader = line.startsWith('||');
+        const cells = line.split(isHeader ? '||' : '|').filter(c => c.trim());
+        
+        if (!currentTable) {
+          currentTable = {
+            type: 'table',
+            attrs: { isNumberColumnEnabled: false, layout: 'default' },
+            content: []
+          };
+        }
+        
+        const row: any = {
+          type: 'tableRow',
+          content: cells.map(cell => ({
+            type: isHeader ? 'tableHeader' : 'tableCell',
+            attrs: {},
+            content: [{
+              type: 'paragraph',
+              content: this.parseInlineJiraWiki(cell.trim())
+            }]
+          }))
+        };
+        
+        currentTable.content.push(row);
+        continue;
+      } else if (currentTable) {
+        content.push(currentTable);
+        currentTable = null;
       }
 
       if (!line.trim()) {
@@ -268,6 +313,10 @@ export class FormatConverter {
       content.push(currentCodeBlock);
     }
 
+    if (currentTable) {
+      content.push(currentTable);
+    }
+
     return {
       type: 'doc',
       version: 1,
@@ -444,6 +493,21 @@ export class FormatConverter {
       
       case 'blockquote':
         return `bq. ${this.extractTextWithMarks(node)}`;
+      
+      case 'table':
+        return node.content?.map((row: any) => {
+          if (row.type === 'tableRow') {
+            const cells = row.content?.map((cell: any) => {
+              const text = this.extractTextWithMarks(cell);
+              return text;
+            }) || [];
+            
+            const isHeader = row.content?.[0]?.type === 'tableHeader';
+            const separator = isHeader ? '||' : '|';
+            return `${separator}${cells.join(separator)}${separator}`;
+          }
+          return '';
+        }).join('\n') || '';
       
       default:
         return this.extractTextWithMarks(node);

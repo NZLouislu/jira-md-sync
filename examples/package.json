@@ -6,7 +6,6 @@
     "md-to-jira": "node ../dist/src/cli/md-to-jira-cli.js",
     "md-to-jira:debug": "set LOG_LEVEL=debug&& node ../dist/src/cli/md-to-jira-cli.js",
     "md-to-jira:dry-run": "set DRY_RUN=true&& node ../dist/src/cli/md-to-jira-cli.js",
-    "md-to-jira:update": "set ALLOW_JIRA_UPDATE=true&& node ../dist/src/cli/md-to-jira-cli.js",
     "jira-to-md": "node ../dist/src/cli/jira-to-md-cli.js",
     "jira-to-md:debug": "set LOG_LEVEL=debug&& node ../dist/src/cli/jira-to-md-cli.js",
     "jira-to-md:dry-run": "set DRY_RUN=true&& node ../dist/src/cli/jira-to-md-cli.js",

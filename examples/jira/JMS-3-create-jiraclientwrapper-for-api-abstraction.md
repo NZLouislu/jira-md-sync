@@ -25,10 +25,14 @@ This issue involves creating a wrapper class for the jira-client. The goal is to
 
 N/A
 
-### Acceptance Criteria
-
 ### Priority
 Medium
 
 ### Labels
 api, jira-client, wrapper
+
+### Assignees
+Louis Lu
+
+### Reporter
+Louis Lu

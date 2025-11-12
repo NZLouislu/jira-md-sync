@@ -83,12 +83,22 @@ export async function mdToJiraCli(): Promise<void> {
     });
   }
 
+  let statusMap: Record<string, string> | undefined;
+  if (process.env.STATUS_MAP) {
+    try {
+      statusMap = JSON.parse(process.env.STATUS_MAP);
+    } catch (error) {
+      console.warn(`Warning: Invalid STATUS_MAP JSON format, using default mapping`);
+    }
+  }
+
   const jiraConfig: JiraConfig = {
     jiraUrl,
     email,
     apiToken,
     projectKey,
-    issueTypeId
+    issueTypeId,
+    statusMap
   };
 
   const logger = {

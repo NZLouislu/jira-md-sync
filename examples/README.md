@@ -25,18 +25,6 @@ npm run jira-to-md
 - Exports all issues from Jira to markdown files
 - Supports pagination, can export unlimited issues (not limited to 50)
 
-### Test Only: Update Mode (⚠️ For Testing Only)
-
-```bash
-npm run md-to-jira:update
-```
-
-**Behavior:**
-- ✅ Creates new issues
-- ⚠️ **Updates existing issues** (by storyId)
-- **Warning:** This will overwrite content in Jira!
-- **Purpose:** Only for testing format conversion
-
 ### Other Commands
 
 ```bash
@@ -52,23 +40,18 @@ npm run jira-to-md -- PROJ-123
 
 ## Important Notes
 
-### Why No Updates by Default?
+### Why No Updates?
+
+This tool is **create-only** by design:
 
 1. **Avoid Conflicts** - Content in Jira may have been modified by others
-2. **One-way Sync** - Jira is the source of truth, Markdown is the export format
+2. **One-way Sync** - Jira is the source of truth, Markdown is for bulk creation
 3. **Safety** - Prevents accidental overwriting of important data
 
-### When to Use Update Mode?
-
-**Only use `md-to-jira:update` in these cases:**
-- ✅ Testing format conversion functionality
-- ✅ Verifying markdown to Jira rendering
-- ✅ Development and debugging
-
-**Do NOT use in these cases:**
-- ❌ Production environment
-- ❌ Team collaboration projects
-- ❌ Issues that have been edited by others
+**Recommended Workflow:**
+- Use markdown for quick bulk creation of issues
+- Manage and update issues in Jira UI
+- Export from Jira for backup/documentation
 
 ## Test Files
 
@@ -85,31 +68,25 @@ JIRA_URL=https://your-domain.atlassian.net
 JIRA_EMAIL=your.email@example.com
 JIRA_API_TOKEN=your_api_token_here
 JIRA_PROJECT_KEY=PROJ
+JIRA_ISSUE_TYPE_ID=10001
 
-# For testing only (do NOT set in production)
-# ALLOW_JIRA_UPDATE=true
+# Optional: Custom status mapping (JSON format)
+# STATUS_MAP={"To Do":"Backlog","Code Review":"In Review","Closed":"Done"}
 ```
 
 ## Recommended Workflows
 
 ### Normal Usage Flow
 
-1. **Export from Jira** → `npm run jira-to-md`
-2. **Edit markdown files**
-3. **Create new issues** → `npm run md-to-jira`
-4. **Edit and manage issues in Jira**
+1. **Create markdown files** → Edit `md/*.md`
+2. **Import to Jira** → `npm run md-to-jira`
+3. **Manage issues in Jira UI**
+4. **Export for backup** → `npm run jira-to-md`
 
 ### Format Testing Flow
 
 1. **Create test markdown** → Edit `md/test-*.md`
-2. **Upload to Jira (update mode)** → `npm run md-to-jira:update`
+2. **Import to Jira** → `npm run md-to-jira`
 3. **Verify format in Jira**
 4. **Export for verification** → `npm run jira-to-md`
 5. **Compare format correctness**
-
-## Notes
-
-- Update mode is controlled by the `ALLOW_JIRA_UPDATE=true` environment variable
-- This variable **should NOT** be set in production `.env` files
-- When published as an npm package, the default behavior is create-only, no updates
-- This ensures users won't accidentally overwrite data in Jira

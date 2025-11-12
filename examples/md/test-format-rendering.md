@@ -1,6 +1,6 @@
 ## Backlog
 
-- Story: JMST-104 Format-Render-001 Headers Test
+- Story: Format-Render-001 Headers Test
   Description: This story contains **all six header levels** to test H1-H6 conversion.
   
   # Header 1
@@ -19,7 +19,7 @@
   Assignees: Louis Lu
   Reporter: Louis Lu
 
-- Story: JMST-105 Format-Render-002 Text Styles Test
+- Story: Format-Render-002 Text Styles Test
   Description: Testing **bold text**, *italic text*, ***bold and italic***, ~~strikethrough~~, and `inline code`.
   
   This paragraph has **bold words**, *italic words*, and ***both bold and italic*** text.
@@ -38,7 +38,7 @@
   Assignees: Louis Lu
   Reporter: Louis Lu
 
-- Story: JMST-106 Format-Render-003 Lists Test
+- Story: Format-Render-003 Lists Test
   Description: Testing unordered and ordered lists with nesting.
   
   **Unordered List:**
@@ -70,7 +70,7 @@
   Assignees: Louis Lu
   Reporter: Louis Lu
 
-- Story: JMST-107 Format-Render-004 Code Blocks Test
+- Story: Format-Render-004 Code Blocks Test
   Description: Testing fenced code blocks with different languages.
   
   **JavaScript Code:**
@@ -103,7 +103,7 @@
   Assignees: Louis Lu
   Reporter: Louis Lu
 
-- Story: JMST-108 Format-Render-005 Links Test
+- Story: Format-Render-005 Links Test
   Description: Testing different types of links.
   
   **Named Links:**
@@ -127,7 +127,7 @@
   Assignees: Louis Lu
   Reporter: Louis Lu
 
-- Story: JMST-109 Format-Render-006 Blockquotes Test
+- Story: Format-Render-006 Blockquotes Test
   Description: Testing blockquote formatting.
   
   Normal paragraph before quote.
@@ -148,7 +148,7 @@
   Assignees: Louis Lu
   Reporter: Louis Lu
 
-- Story: JMST-110 Format-Render-007 Tables Test
+- Story: Format-Render-007 Tables Test
   Description: Testing table formatting.
   
   **Simple Table:**
@@ -175,52 +175,52 @@
   Assignees: Louis Lu
   Reporter: Louis Lu
 
-- Story: JMST-111 Format-Render-008 Complex Mixed Formatting
+- Story: Format-Render-008 Complex Mixed Formatting
   Description: Testing complex combinations of multiple formats in one story.
   
-  # Main Title
-  
-  This story tests **multiple formats** together.
-  
-  ## Section 1: Lists with Code
-  
-  Here's a list with code examples:
-  - Install package: `npm install jira-md-sync`
-  - Run command: `npm run md-to-jira`
-  - Check result in **Jira dashboard**
-  
-  ## Section 2: Code Block with Explanation
-  
-  Example configuration:
-  
-  ```json
-  {
-    "jiraUrl": "https://your-domain.atlassian.net",
-    "projectKey": "JMST",
-    "issueTypeId": "10001"
-  }
-  ```
-  
-  > **Note:** Make sure to replace the values with your actual Jira configuration.
-  
-  ## Section 3: Table with Links
-  
-  | Resource | Link | Description |
-  |----------|------|-------------|
-  | Documentation | [Read Docs](https://example.com/docs) | Full API documentation |
-  | GitHub | [View Code](https://github.com/example) | Source code repository |
-  | Support | [Get Help](https://example.com/support) | Contact support team |
-  
-  ### Subsection: Important Notes
-  
-  1. Always test with `--dry-run` first
-  2. Check your **API permissions**
-  3. Review the [security guidelines](https://example.com/security)
-  
-  **Final checklist:**
-  - [ ] Configuration is correct
-  - [ ] Permissions are granted
-  - [ ] Backup is created
+    # Main Title
+    
+    This story tests **multiple formats** together.
+    
+    ## Section 1: Lists with Code
+    
+    Here's a list with code examples:
+    - Install package: `npm install jira-md-sync`
+    - Run command: `npm run md-to-jira`
+    - Check result in **Jira dashboard**
+    
+    ## Section 2: Code Block with Explanation
+    
+    Example configuration:
+    
+    ```json
+    {
+      "jiraUrl": "https://your-domain.atlassian.net",
+      "projectKey": "JMST",
+      "issueTypeId": "10001"
+    }
+    ```
+    
+    > **Note:** Make sure to replace the values with your actual Jira configuration.
+    
+    ## Section 3: Table with Links
+    
+    | Resource | Link | Description |
+    |----------|------|-------------|
+    | Documentation | [Read Docs](https://example.com/docs) | Full API documentation |
+    | GitHub | [View Code](https://github.com/example) | Source code repository |
+    | Support | [Get Help](https://example.com/support) | Contact support team |
+    
+    ### Subsection: Important Notes
+    
+    1. Always test with `--dry-run` first
+    2. Check your **API permissions**
+    3. Review the [security guidelines](https://example.com/security)
+    
+    **Final checklist:**
+    - [ ] Configuration is correct
+    - [ ] Permissions are granted
+    - [ ] Backup is created
   Acceptance_Criteria:
     - [ ] All headers render correctly
     - [ ] Lists with inline code work
@@ -234,7 +234,7 @@
   Assignees: Louis Lu
   Reporter: Louis Lu
 
-- Story: JMST-112 Format-Render-009 Special Characters Test
+- Story: Format-Render-009 Special Characters Test
   Description: Testing special characters and escaping.
   
   **Special Characters:**
@@ -264,7 +264,7 @@
   Assignees: Louis Lu
   Reporter: Louis Lu
 
-- Story: JMST-113 Format-Render-010 Emoji and Unicode Test
+- Story: Format-Render-010 Emoji and Unicode Test
   Description: Testing emoji and unicode character support.
   
   **Emojis:**
