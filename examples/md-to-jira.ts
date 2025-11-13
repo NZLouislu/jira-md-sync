@@ -1,4 +1,5 @@
 import "dotenv/config";
+import path from "path";
 import { mdToJira } from "../src/jira/md-to-jira";
 import type { JiraConfig } from "../src/jira/types";
 
@@ -11,7 +12,14 @@ async function main() {
     issueTypeId: process.env.JIRA_ISSUE_TYPE_ID || "10001"
   };
 
-  const inputDir = process.env.MD_INPUT_DIR || "./jiramd";
+  // Get input directory from environment variable or use default
+  // Priority: MD_INPUT_DIR > default (jiramd)
+  const inputDirEnv = process.env.MD_INPUT_DIR || "jiramd";
+
+  // Resolve path: if absolute, use as-is; if relative, resolve from current directory
+  const inputDir = path.isAbsolute(inputDirEnv)
+    ? inputDirEnv
+    : path.resolve(process.cwd(), inputDirEnv);
 
   const logger = {
     info: (...args: any[]) => console.log(...args),
@@ -21,6 +29,7 @@ async function main() {
   };
 
   console.log("Starting Markdown to Jira import...");
+  console.log(`Input directory: ${inputDir}`);
 
   const result = await mdToJira({
     jiraConfig,

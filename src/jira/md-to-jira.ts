@@ -65,7 +65,7 @@ async function createIssueFromStory(
       'Low': '4',
       'Lowest': '5'
     };
-    
+
     const priorityId = priorityMap[priorityName] || priorityMap['Medium'];
     payload.fields.priority = { id: priorityId };
   }
@@ -153,15 +153,17 @@ export async function mdToJira(options: MdToJiraOptions): Promise<{
   skipped: number;
   errors: string[];
 }> {
-  const { jiraConfig, inputDir, dryRun = false, logger } = options;
+  const { jiraConfig, dryRun = false, logger } = options;
 
   if (!jiraConfig || !jiraConfig.jiraUrl || !jiraConfig.projectKey) {
     throw new Error('Invalid Jira configuration: jiraUrl and projectKey are required');
   }
 
-  if (!inputDir || inputDir.trim() === '') {
-    throw new Error('Input directory is required');
-  }
+  // Get input directory: use provided value, or default to 'jiramd' in project root
+  const inputDirRaw = options.inputDir || 'jiramd';
+  const inputDir = path.isAbsolute(inputDirRaw)
+    ? inputDirRaw
+    : path.resolve(process.cwd(), inputDirRaw);
 
   try {
     const stats = await fs.stat(inputDir);
@@ -206,7 +208,7 @@ export async function mdToJira(options: MdToJiraOptions): Promise<{
       for (const story of stories) {
         try {
           let existingIssue = null;
-          
+
           // If story has a storyId (like JMST-104), try to fetch that specific issue
           if (story.storyId && story.storyId.match(/^[A-Z]+-\d+$/)) {
             try {
@@ -224,7 +226,7 @@ export async function mdToJira(options: MdToJiraOptions): Promise<{
               }
             }
           }
-          
+
           // If no storyId or issue not found by ID, search by title
           if (!existingIssue) {
             const escapedTitle = story.title.replace(/"/g, '\\"');

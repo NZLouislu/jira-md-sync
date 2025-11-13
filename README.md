@@ -188,9 +188,11 @@ dotenv.config();
 
 async function main() {
   // Input directory: where you edit markdown files
-  // Priority: CLI arg > MD_INPUT_DIR > default (jiramd)
-  const inputDir = process.env.MD_INPUT_DIR || 
-                   path.join(process.cwd(), 'jiramd');
+  // Priority: MD_INPUT_DIR > default (jiramd)
+  const inputDirEnv = process.env.MD_INPUT_DIR || 'jiramd';
+  const inputDir = path.isAbsolute(inputDirEnv)
+    ? inputDirEnv
+    : path.resolve(process.cwd(), inputDirEnv);
 
   const result = await mdToJira({
     jiraConfig: {
@@ -275,14 +277,17 @@ async function main() {
   const issueKey = args[0];
   
   // Output directory: where Jira exports go
-  // Priority: CLI arg > MD_OUTPUT_DIR > default (jira)
-  const outputDir = args[1] || 
-                    process.env.MD_OUTPUT_DIR || 
-                    path.join(process.cwd(), 'jira');
+  // Priority: MD_OUTPUT_DIR > default (jira)
+  const outputDirEnv = process.env.MD_OUTPUT_DIR || 'jira';
+  const outputDir = path.isAbsolute(outputDirEnv)
+    ? outputDirEnv
+    : path.resolve(process.cwd(), outputDirEnv);
 
   // Input directory: for preserving labels order
-  const inputDir = process.env.MD_INPUT_DIR || 
-                   path.join(process.cwd(), 'jiramd');
+  const inputDirEnv = process.env.MD_INPUT_DIR || 'jiramd';
+  const inputDir = path.isAbsolute(inputDirEnv)
+    ? inputDirEnv
+    : path.resolve(process.cwd(), inputDirEnv);
 
   let jql = process.env.JIRA_JQL;
   

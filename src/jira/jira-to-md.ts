@@ -116,7 +116,13 @@ export async function jiraToMd(options: JiraToMdOptions): Promise<{
   files: { file: string; storyId: string; title: string; status: string }[];
   totalIssues: number;
 }> {
-  const { jiraConfig, outputDir, inputDir, jql, dryRun = false, logger } = options;
+  const { jiraConfig, inputDir, jql, dryRun = false, logger } = options;
+
+  // Get output directory: use provided value, or default to 'jira' in project root
+  const outputDirRaw = options.outputDir || 'jira';
+  const outputDir = path.isAbsolute(outputDirRaw)
+    ? outputDirRaw
+    : path.resolve(process.cwd(), outputDirRaw);
 
   const verbose = logger?.debug || logger?.info;
 
@@ -267,7 +273,13 @@ export async function jiraToMdSingleIssue(options: JiraToMdOptions & { issueKey:
   status?: string;
   errors?: string[];
 }> {
-  const { issueKey, jiraConfig, outputDir, dryRun = false, logger } = options;
+  const { issueKey, jiraConfig, dryRun = false, logger } = options;
+
+  // Get output directory: use provided value, or default to 'jira' in project root
+  const outputDirRaw = options.outputDir || 'jira';
+  const outputDir = path.isAbsolute(outputDirRaw)
+    ? outputDirRaw
+    : path.resolve(process.cwd(), outputDirRaw);
 
   const verbose = logger?.debug || logger?.info;
 

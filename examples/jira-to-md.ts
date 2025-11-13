@@ -1,4 +1,5 @@
 import "dotenv/config";
+import path from "path";
 import { jiraToMd } from "../src/jira/jira-to-md";
 import type { JiraConfig } from "../src/jira/types";
 
@@ -10,6 +11,15 @@ async function main() {
     projectKey: process.env.JIRA_PROJECT_KEY || "PROJ"
   };
 
+  // Get output directory from environment variable or use default
+  // Priority: MD_OUTPUT_DIR > default (jira)
+  const outputDirEnv = process.env.MD_OUTPUT_DIR || "jira";
+
+  // Resolve path: if absolute, use as-is; if relative, resolve from current directory
+  const outputDir = path.isAbsolute(outputDirEnv)
+    ? outputDirEnv
+    : path.resolve(process.cwd(), outputDirEnv);
+
   const logger = {
     info: (...args: any[]) => console.log(...args),
     debug: (...args: any[]) => console.log(...args),
@@ -18,10 +28,11 @@ async function main() {
   };
 
   console.log("Starting Jira to Markdown export...");
-  
+  console.log(`Output directory: ${outputDir}`);
+
   const result = await jiraToMd({
     jiraConfig,
-    outputDir: "./md",
+    outputDir,
     jql: `project = ${jiraConfig.projectKey} ORDER BY key ASC`,
     dryRun: false,
     logger
