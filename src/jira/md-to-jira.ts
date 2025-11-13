@@ -78,10 +78,20 @@ async function createIssueFromStory(
 
   if (story.assignees && story.assignees.length > 0) {
     try {
-      const assigneeName = story.assignees[0];
+      let assigneeName = story.assignees[0];
       if (!assigneeName || assigneeName.trim() === '') {
         if (logger?.warn) {
           logger.warn(`md-to-jira: Empty assignee name for ${issue.key}`);
+        }
+        return issue.key;
+      }
+
+      // Clean up assignee name: remove brackets and trim
+      assigneeName = assigneeName.replace(/^\[|\]$/g, '').trim();
+
+      if (!assigneeName) {
+        if (logger?.warn) {
+          logger.warn(`md-to-jira: Empty assignee name after cleanup for ${issue.key}`);
         }
         return issue.key;
       }

@@ -12,8 +12,8 @@ async function main() {
   };
 
   // Get output directory from environment variable or use default
-  // Priority: MD_OUTPUT_DIR > default (jira)
-  const outputDirEnv = process.env.MD_OUTPUT_DIR || "jira";
+  // Priority: JIRA_MD_OUTPUT_DIR > default (jira)
+  const outputDirEnv = process.env.JIRA_MD_OUTPUT_DIR || "jira";
 
   // Resolve path: if absolute, use as-is; if relative, resolve from current directory
   const outputDir = path.isAbsolute(outputDirEnv)

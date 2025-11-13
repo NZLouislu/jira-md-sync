@@ -12,24 +12,24 @@ export const DEFAULT_OUTPUT_DIR = 'jira';
  * Get input directory for md-to-jira operations (source files)
  * 
  * Priority order:
- * 1. MD_INPUT_DIR environment variable
+ * 1. JIRA_MD_INPUT_DIR environment variable
  * 2. Default value (jiramd)
  * 
  * @returns The resolved input directory path
  */
 export function getInputDir(): string {
-    return process.env.MD_INPUT_DIR || DEFAULT_INPUT_DIR;
+    return process.env.JIRA_MD_INPUT_DIR || DEFAULT_INPUT_DIR;
 }
 
 /**
  * Get output directory for jira-to-md operations (sync cache)
  * 
  * Priority order:
- * 1. MD_OUTPUT_DIR environment variable
+ * 1. JIRA_MD_OUTPUT_DIR environment variable
  * 2. Default value (jira)
  * 
  * @returns The resolved output directory path
  */
 export function getOutputDir(): string {
-    return process.env.MD_OUTPUT_DIR || DEFAULT_OUTPUT_DIR;
+    return process.env.JIRA_MD_OUTPUT_DIR || DEFAULT_OUTPUT_DIR;
 }

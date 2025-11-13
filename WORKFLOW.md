@@ -125,7 +125,7 @@ sequenceDiagram
         Note over Renderer: Generate standardized markdown<br/>## Story: STORY-001 Title<br/>### Status<br/>### Description<br/>### Todo Items
         
         Renderer-->>CLI: Return markdown content
-        CLI->>FS: Write file<br/>(MD_OUTPUT_DIR/story-id.md)
+        CLI->>FS: Write file<br/>(JIRA_MD_OUTPUT_DIR/story-id.md)
     end
     
     CLI-->>User: Display export summary<br/>(file count/filter results)
@@ -148,7 +148,7 @@ flowchart TD
     H -->|No Permission| I[Show Permission Error<br/>Check board ID and access]
     H -->|Has Permission| J[Load Workflow Mapping]
     
-    J --> K[Validate Directory Permissions<br/>MD_INPUT_DIR/MD_OUTPUT_DIR]
+    J --> K[Validate Directory Permissions<br/>JIRA_MD_INPUT_DIR/JIRA_MD_OUTPUT_DIR]
     K --> L{Directory Check}
     L -->|Failed| M[Show Directory Error<br/>Create directories or check permissions]
     L -->|Success| N[Configuration Validation Complete<br/>✅ Ready to proceed]

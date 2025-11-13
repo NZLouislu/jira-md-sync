@@ -27,7 +27,7 @@ export async function syncCli(): Promise<void> {
 
 async function exportToMarkdown(): Promise<void> {
   const config = buildConfig();
-  const outputDir = process.env.MD_OUTPUT_DIR || `./jira`;
+  const outputDir = process.env.JIRA_MD_OUTPUT_DIR || `./jira`;
   const dryRun = process.env.DRY_RUN === 'true';
   const jql = process.env.JIRA_JQL;
 
@@ -58,7 +58,7 @@ async function exportToMarkdown(): Promise<void> {
 
 async function importFromMarkdown(): Promise<void> {
   const config = buildConfig();
-  const inputDir = process.env.MD_INPUT_DIR || `./jira`;
+  const inputDir = process.env.JIRA_MD_INPUT_DIR || `./jira`;
   const dryRun = process.env.DRY_RUN === 'true';
 
   const logger = {
@@ -137,9 +137,9 @@ COMMANDS:
   --help, -h         Show this help message
 
 ENVIRONMENT VARIABLES:
-  DRY_RUN            Set to 'true' for dry run mode
-  MD_OUTPUT_DIR      Output directory for markdown files (default: ./jira)
-  MD_INPUT_DIR       Input directory for markdown files (default: ./jira)
+  DRY_RUN                Set to 'true' for dry run mode
+  JIRA_MD_OUTPUT_DIR     Output directory for markdown files (default: ./jira)
+  JIRA_MD_INPUT_DIR      Input directory for markdown files (default: ./jira)
 
 JIRA CONFIGURATION:
   JIRA_URL           Jira instance URL (e.g., https://your-domain.atlassian.net)

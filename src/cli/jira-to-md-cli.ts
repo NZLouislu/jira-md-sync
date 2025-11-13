@@ -42,7 +42,7 @@ export async function jiraToMdCli(): Promise<void> {
   const apiToken = process.env.JIRA_API_TOKEN || "";
   const projectKey = process.env.JIRA_PROJECT_KEY || "";
 
-  // Priority: CLI arg > MD_OUTPUT_DIR > default (jira)
+  // Priority: CLI arg > JIRA_MD_OUTPUT_DIR > default (jira)
   const outputDirEnv = customOutputDir || getOutputDir();
 
   // Resolve path: if absolute, use as-is; if relative, resolve from project root
@@ -107,7 +107,7 @@ export async function jiraToMdCli(): Promise<void> {
   };
 
   // Try to find input directory for preserving labels order
-  // Priority: MD_INPUT_DIR > default (jiramd)
+  // Priority: JIRA_MD_INPUT_DIR > default (jiramd)
   const inputDirEnv = getInputDir();
   let inputDir: string | undefined;
 

@@ -134,10 +134,10 @@ JIRA_ISSUE_TYPE_ID=10001
 
 # Directory Configuration (Optional)
 # Input: Where you edit markdown files (default: jiramd)
-MD_INPUT_DIR=jiramd
+JIRA_MD_INPUT_DIR=jiramd
 
 # Output: Where Jira exports go (default: jira)
-MD_OUTPUT_DIR=jira
+JIRA_MD_OUTPUT_DIR=jira
 
 # Optional: Custom status mapping (JSON format)
 # Maps your markdown status names to Jira status names
@@ -188,8 +188,8 @@ dotenv.config();
 
 async function main() {
   // Input directory: where you edit markdown files
-  // Priority: MD_INPUT_DIR > default (jiramd)
-  const inputDirEnv = process.env.MD_INPUT_DIR || 'jiramd';
+  // Priority: JIRA_MD_INPUT_DIR > default (jiramd)
+  const inputDirEnv = process.env.JIRA_MD_INPUT_DIR || 'jiramd';
   const inputDir = path.isAbsolute(inputDirEnv)
     ? inputDirEnv
     : path.resolve(process.cwd(), inputDirEnv);
@@ -228,19 +228,19 @@ npm run md-to-jira
 **Use Custom Directory:**
 Set in `.env` file (recommended, works on all platforms):
 ```env
-MD_INPUT_DIR=custom/path
+JIRA_MD_INPUT_DIR=custom/path
 ```
 
 Or use environment variable:
 ```bash
 # Linux/macOS
-MD_INPUT_DIR=custom/path npm run md-to-jira
+JIRA_MD_INPUT_DIR=custom/path npm run md-to-jira
 
 # Windows PowerShell
-$env:MD_INPUT_DIR='custom/path'; npm run md-to-jira
+$env:JIRA_MD_INPUT_DIR='custom/path'; npm run md-to-jira
 
 # Windows CMD
-set MD_INPUT_DIR=custom/path&& npm run md-to-jira
+set JIRA_MD_INPUT_DIR=custom/path&& npm run md-to-jira
 ```
 
 **Dry Run Mode:**
@@ -277,14 +277,14 @@ async function main() {
   const issueKey = args[0];
   
   // Output directory: where Jira exports go
-  // Priority: MD_OUTPUT_DIR > default (jira)
-  const outputDirEnv = process.env.MD_OUTPUT_DIR || 'jira';
+  // Priority: JIRA_MD_OUTPUT_DIR > default (jira)
+  const outputDirEnv = process.env.JIRA_MD_OUTPUT_DIR || 'jira';
   const outputDir = path.isAbsolute(outputDirEnv)
     ? outputDirEnv
     : path.resolve(process.cwd(), outputDirEnv);
 
   // Input directory: for preserving labels order
-  const inputDirEnv = process.env.MD_INPUT_DIR || 'jiramd';
+  const inputDirEnv = process.env.JIRA_MD_INPUT_DIR || 'jiramd';
   const inputDir = path.isAbsolute(inputDirEnv)
     ? inputDirEnv
     : path.resolve(process.cwd(), inputDirEnv);
@@ -330,19 +330,19 @@ npm run jira-to-md -- PROJ-123
 **Use Custom Output Directory:**
 Set in `.env` file (recommended, works on all platforms):
 ```env
-MD_OUTPUT_DIR=exports
+JIRA_MD_OUTPUT_DIR=exports
 ```
 
 Or use environment variable:
 ```bash
 # Linux/macOS
-MD_OUTPUT_DIR=exports npm run jira-to-md
+JIRA_MD_OUTPUT_DIR=exports npm run jira-to-md
 
 # Windows PowerShell
-$env:MD_OUTPUT_DIR='exports'; npm run jira-to-md
+$env:JIRA_MD_OUTPUT_DIR='exports'; npm run jira-to-md
 
 # Windows CMD
-set MD_OUTPUT_DIR=exports&& npm run jira-to-md
+set JIRA_MD_OUTPUT_DIR=exports&& npm run jira-to-md
 ```
 
 ## Configuration
@@ -359,28 +359,28 @@ The tool uses separate directories for input (source) and output (cache):
 
 1. **Environment Variables in .env File** (Recommended - works on all platforms)
 ```env
-MD_INPUT_DIR=jiramd
-MD_OUTPUT_DIR=jira
+JIRA_MD_INPUT_DIR=jiramd
+JIRA_MD_OUTPUT_DIR=jira
 ```
 
 2. **Command Line Environment Variables**
 
 Linux/macOS:
 ```bash
-MD_INPUT_DIR=custom/input npm run md-to-jira
-MD_OUTPUT_DIR=custom/output npm run jira-to-md
+JIRA_MD_INPUT_DIR=custom/input npm run md-to-jira
+JIRA_MD_OUTPUT_DIR=custom/output npm run jira-to-md
 ```
 
 Windows PowerShell:
 ```powershell
-$env:MD_INPUT_DIR='custom/input'; npm run md-to-jira
-$env:MD_OUTPUT_DIR='custom/output'; npm run jira-to-md
+$env:JIRA_MD_INPUT_DIR='custom/input'; npm run md-to-jira
+$env:JIRA_MD_OUTPUT_DIR='custom/output'; npm run jira-to-md
 ```
 
 Windows CMD:
 ```cmd
-set MD_INPUT_DIR=custom/input&& npm run md-to-jira
-set MD_OUTPUT_DIR=custom/output&& npm run jira-to-md
+set JIRA_MD_INPUT_DIR=custom/input&& npm run md-to-jira
+set JIRA_MD_OUTPUT_DIR=custom/output&& npm run jira-to-md
 ```
 
 3. **Programmatic**
@@ -401,7 +401,7 @@ await jiraToMd({
 
 **Priority Order:**
 1. Command line argument (highest)
-2. Environment variable (`MD_INPUT_DIR`, `MD_OUTPUT_DIR`)
+2. Environment variable (`JIRA_MD_INPUT_DIR`, `JIRA_MD_OUTPUT_DIR`)
 3. Default value (`jiramd`, `jira`)
 
 ### Environment Variables
@@ -413,8 +413,8 @@ await jiraToMd({
 | `JIRA_API_TOKEN` | Yes | API token for authentication | - |
 | `JIRA_PROJECT_KEY` | Yes | Jira project key (e.g., PROJ) | - |
 | `JIRA_ISSUE_TYPE_ID` | No | Issue type ID for creating issues | `10001` |
-| `MD_INPUT_DIR` | No | Input directory (source markdown files) | `jiramd` |
-| `MD_OUTPUT_DIR` | No | Output directory (Jira exports) | `jira` |
+| `JIRA_MD_INPUT_DIR` | No | Input directory (source markdown files) | `jiramd` |
+| `JIRA_MD_OUTPUT_DIR` | No | Output directory (Jira exports) | `jira` |
 | `STATUS_MAP` | No | Custom status mapping (JSON format) | See below |
 | `DRY_RUN` | No | Set to "true" for dry run mode | `false` |
 
@@ -713,7 +713,7 @@ Some formats may not survive round-trip perfectly:
 **Directory Issues:**
 ```bash
 # Check current configuration
-$ node -e "console.log('Input:', process.env.MD_INPUT_DIR || 'jiramd'); console.log('Output:', process.env.MD_OUTPUT_DIR || 'jira')"
+$ node -e "console.log('Input:', process.env.JIRA_MD_INPUT_DIR || 'jiramd'); console.log('Output:', process.env.JIRA_MD_OUTPUT_DIR || 'jira')"
 
 # Create default directories
 $ mkdir -p jiramd jira

@@ -15,8 +15,8 @@ JIRA_EMAIL=your-email@example.com
 JIRA_API_TOKEN=your-api-token
 JIRA_PROJECT_KEY=PROJ
 JIRA_ISSUE_TYPE_ID=10001
-MD_INPUT_DIR=./md
-MD_OUTPUT_DIR=./jira
+JIRA_MD_INPUT_DIR=./md
+JIRA_MD_OUTPUT_DIR=./jira
 ```
 
 ## Common Commands

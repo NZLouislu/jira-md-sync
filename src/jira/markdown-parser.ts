@@ -114,13 +114,31 @@ function parseStorySection(lines: string[], start: number, options: ParseOptions
       const todo = parseTodoLine(l);
       if (todo) todos.push(todo);
     } else if (section.includes("assignee")) {
-      const vals = splitCsvLine(l);
-      for (const v of vals) if (v) assignees.push(v);
+      if (l.trim()) {
+        // Handle both comma-separated and array format [assignee1, assignee2]
+        const arrayMatch = l.trim().match(/^\[(.*)\]$/);
+        if (arrayMatch) {
+          const vals = splitCsvLine(arrayMatch[1]);
+          for (const v of vals) if (v) assignees.push(v);
+        } else {
+          const vals = splitCsvLine(l);
+          for (const v of vals) if (v) assignees.push(v);
+        }
+      }
     } else if (section.includes("reporter")) {
       if (l.trim()) reporter = l.trim();
     } else if (section.includes("label")) {
-      const vals = splitCsvLine(l);
-      for (const v of vals) if (v) labels.push(v);
+      if (l.trim()) {
+        // Handle both comma-separated and array format [label1, label2]
+        const arrayMatch = l.trim().match(/^\[(.*)\]$/);
+        if (arrayMatch) {
+          const vals = splitCsvLine(arrayMatch[1]);
+          for (const v of vals) if (v) labels.push(v);
+        } else {
+          const vals = splitCsvLine(l);
+          for (const v of vals) if (v) labels.push(v);
+        }
+      }
     } else if (section.includes("priority")) {
       if (l.trim()) {
         const text = l.trim();
@@ -155,7 +173,7 @@ function parseStorySection(lines: string[], start: number, options: ParseOptions
 
 function combineBodyAndTodos(bodyLines: string[], todos: JiraTodo[]): string {
   let fullBody = bodyLines.join("\n").trim();
-  
+
   // Add Acceptance Criteria section if there are todos
   if (todos.length > 0) {
     if (fullBody) {
@@ -167,7 +185,7 @@ function combineBodyAndTodos(bodyLines: string[], todos: JiraTodo[]): string {
       fullBody += `- ${checkbox} ${todo.text}\n`;
     }
   }
-  
+
   return fullBody;
 }
 
@@ -229,8 +247,15 @@ function parseListStorySection(lines: string[], start: number, options: ParseOpt
         status = fieldValue;
       } else if (fieldName.includes("assignee")) {
         if (fieldValue) {
-          const vals = splitCsvLine(fieldValue);
-          assignees.push(...vals.filter(Boolean));
+          // Handle both comma-separated and array format [assignee1, assignee2]
+          const arrayMatch = fieldValue.match(/^\[(.*)\]$/);
+          if (arrayMatch) {
+            const vals = splitCsvLine(arrayMatch[1]);
+            assignees.push(...vals.filter(Boolean));
+          } else {
+            const vals = splitCsvLine(fieldValue);
+            assignees.push(...vals.filter(Boolean));
+          }
         }
       } else if (fieldName === "reporter") {
         reporter = fieldValue;
@@ -273,7 +298,7 @@ function parseListStorySection(lines: string[], start: number, options: ParseOpt
     // Handle continuation lines for acceptance criteria (more indented content)
     if (l.match(/^\s{4,}/)) {
       const content = l.trim();
-      
+
       if (currentField === "acceptance_criteria" || currentField.includes("acceptance") || currentField.includes("criteria")) {
         const todo = parseTodoLine(content);
         if (todo) {

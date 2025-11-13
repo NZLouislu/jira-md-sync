@@ -13,8 +13,8 @@ async function main() {
   };
 
   // Get input directory from environment variable or use default
-  // Priority: MD_INPUT_DIR > default (jiramd)
-  const inputDirEnv = process.env.MD_INPUT_DIR || "jiramd";
+  // Priority: JIRA_MD_INPUT_DIR > default (jiramd)
+  const inputDirEnv = process.env.JIRA_MD_INPUT_DIR || "jiramd";
 
   // Resolve path: if absolute, use as-is; if relative, resolve from current directory
   const inputDir = path.isAbsolute(inputDirEnv)

@@ -5,6 +5,32 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.1.1] - 2025-11-13
+
+### Breaking Changes
+- **Environment variables renamed**: `MD_INPUT_DIR` → `JIRA_MD_INPUT_DIR`, `MD_OUTPUT_DIR` → `JIRA_MD_OUTPUT_DIR`
+  - This prevents conflicts when using multiple MD sync tools (Jira, Trello, GitHub) in the same project
+  - See [Migration Guide](docs/MIGRATION_GUIDE.md) for upgrade instructions
+
+### Fixed
+- **Assignees and Labels parsing**: Now correctly handles both array format `[value1, value2]` and comma-separated format `value1, value2`
+- **Strikethrough rendering**: Improved detection logic to avoid conflicts with list markers
+- **User search**: Added cleanup of bracket characters before searching for users in Jira
+- **Markdown parser**: Enhanced both section header and list story formats to support bracket notation
+
+### Improved
+- **Format flexibility**: Both `Assignees: [backend, frontend]` and `Assignees: backend, frontend` now work correctly
+- **Error handling**: Better error messages when users are not found in Jira
+- **Documentation**: Added comprehensive format examples and troubleshooting guide
+- **Multi-tool compatibility**: Environment variables now have `JIRA_` prefix to avoid conflicts
+
+### Added
+- New documentation file: `docs/NPM_PACKAGE_FIXES.md` - Detailed explanation of fixes and usage recommendations
+- New documentation file: `docs/MIGRATION_GUIDE.md` - Step-by-step guide for upgrading from v0.1.0
+- New documentation file: `docs/修复说明_中文.md` - Chinese documentation for fixes
+- New example file: `examples/correct-format-example.md` - Demonstrates correct Markdown format with Chinese comments
+- New template file: `.env.example` - Template for environment configuration
+
 ## [0.1.0] - 2025-10-10
 
 ### Added

@@ -39,7 +39,7 @@ The CLI automatically detects the issue key format:
 ### Export Single Issue
 
 ```bash
-# Export JMS-16 to default directory (./jira or MD_OUTPUT_DIR)
+# Export JMS-16 to default directory (./jira or JIRA_MD_OUTPUT_DIR)
 npm run jira-to-md -- JMS-16
 
 # Output:

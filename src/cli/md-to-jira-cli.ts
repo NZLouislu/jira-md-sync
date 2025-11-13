@@ -41,7 +41,7 @@ export async function mdToJiraCli(): Promise<void> {
   const projectKey = process.env.JIRA_PROJECT_KEY || "";
   const issueTypeId = process.env.JIRA_ISSUE_TYPE_ID;
 
-  // Priority: CLI arg > MD_INPUT_DIR > default (jiramd)
+  // Priority: CLI arg > JIRA_MD_INPUT_DIR > default (jiramd)
   const inputDir = customInputDir || getInputDir();
 
   // Resolve path: if absolute, use as-is; if relative, resolve from project root

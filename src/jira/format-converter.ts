@@ -31,13 +31,13 @@ export class FormatConverter {
     if (!adf) return '';
     const jiraWiki = this.adfToJiraWiki(adf);
     let markdown = this.jiraToMarkdown(jiraWiki);
-    
+
     // Fix jira2md bug: it converts [ ] to < >
     // This is a workaround for checkbox formatting
     markdown = markdown.replace(/- < > /g, '- [ ] ');
     markdown = markdown.replace(/- <x> /g, '- [x] ');
     markdown = markdown.replace(/- <X> /g, '- [X] ');
-    
+
     return markdown;
   }
 
@@ -92,10 +92,10 @@ export class FormatConverter {
           content.push(currentList);
           currentList = null;
         }
-        
+
         const isHeader = line.startsWith('||');
         const cells = line.split(isHeader ? '||' : '|').filter(c => c.trim());
-        
+
         if (!currentTable) {
           currentTable = {
             type: 'table',
@@ -103,7 +103,7 @@ export class FormatConverter {
             content: []
           };
         }
-        
+
         const row: any = {
           type: 'tableRow',
           content: cells.map(cell => ({
@@ -115,7 +115,7 @@ export class FormatConverter {
             }]
           }))
         };
-        
+
         currentTable.content.push(row);
         continue;
       } else if (currentTable) {
@@ -225,15 +225,15 @@ export class FormatConverter {
       } else if (line.startsWith('* ') || line.startsWith('*\t') || line.startsWith('- ') || line.startsWith('-\t')) {
         const bulletChar = line.startsWith('*') ? '*' : '-';
         const itemText = line.substring(line.indexOf(bulletChar) + 1).trim();
-        
+
         // Check if this is a checkbox item (task)
         const checkboxMatch = itemText.match(/^\[([ xX])\]\s+(.+)$/);
-        
+
         if (checkboxMatch) {
           // This is a checkbox item - create taskList
           const isChecked = checkboxMatch[1].toLowerCase() === 'x';
           const taskText = checkboxMatch[2];
-          
+
           if (!currentList || currentList.type !== 'taskList') {
             if (currentList) {
               content.push(currentList);
@@ -244,7 +244,7 @@ export class FormatConverter {
               content: []
             };
           }
-          
+
           currentList.content.push({
             type: 'taskItem',
             attrs: {
@@ -377,9 +377,27 @@ export class FormatConverter {
       }
 
       // Check for strikethrough: -text-
-      if (text[i] === '-') {
-        const endIndex = text.indexOf('-', i + 1);
-        if (endIndex !== -1 && endIndex > i + 1) {
+      // Only match if surrounded by non-space characters to avoid list conflicts
+      if (text[i] === '-' && i < text.length - 1) {
+        // Look ahead to find matching closing dash
+        let endIndex = -1;
+        for (let j = i + 1; j < text.length; j++) {
+          if (text[j] === '-' && j > i + 1) {
+            // Check if this could be a valid strikethrough
+            // Must have content between dashes and not be part of a list
+            const beforeChar = i > 0 ? text[i - 1] : '';
+            const afterChar = j < text.length - 1 ? text[j + 1] : '';
+            const hasContent = j > i + 1;
+
+            // Valid if: has content, not at line start, and not followed by space (list marker)
+            if (hasContent && beforeChar !== '\n' && afterChar !== ' ') {
+              endIndex = j;
+              break;
+            }
+          }
+        }
+
+        if (endIndex !== -1) {
           const innerText = text.substring(i + 1, endIndex);
           content.push({
             type: 'text',
@@ -451,7 +469,7 @@ export class FormatConverter {
 
   private adfToJiraWiki(adf: any): string {
     if (!adf || !adf.content) return '';
-    
+
     return adf.content.map((node: any) => this.nodeToJiraWiki(node)).filter((s: string) => s).join('\n\n');
   }
 
@@ -463,20 +481,20 @@ export class FormatConverter {
         const level = node.attrs?.level || 1;
         const headingText = this.extractTextWithMarks(node);
         return `h${level}. ${headingText}`;
-      
+
       case 'paragraph':
         return this.extractTextWithMarks(node);
-      
+
       case 'bulletList':
-        return node.content?.map((item: any) => 
+        return node.content?.map((item: any) =>
           `* ${this.extractTextWithMarks(item)}`
         ).join('\n') || '';
-      
+
       case 'orderedList':
-        return node.content?.map((item: any) => 
+        return node.content?.map((item: any) =>
           `# ${this.extractTextWithMarks(item)}`
         ).join('\n') || '';
-      
+
       case 'taskList':
         return node.content?.map((item: any) => {
           const state = item.attrs?.state || 'TODO';
@@ -485,15 +503,15 @@ export class FormatConverter {
           // Use - instead of * to avoid jira2md converting [ ] to < >
           return `- ${checkbox} ${text}`;
         }).join('\n') || '';
-      
+
       case 'codeBlock':
         const lang = node.attrs?.language || '';
         const code = this.extractText(node);
         return lang ? `{code:${lang}}\n${code}\n{code}` : `{code}\n${code}\n{code}`;
-      
+
       case 'blockquote':
         return `bq. ${this.extractTextWithMarks(node)}`;
-      
+
       case 'table':
         return node.content?.map((row: any) => {
           if (row.type === 'tableRow') {
@@ -501,14 +519,14 @@ export class FormatConverter {
               const text = this.extractTextWithMarks(cell);
               return text;
             }) || [];
-            
+
             const isHeader = row.content?.[0]?.type === 'tableHeader';
             const separator = isHeader ? '||' : '|';
             return `${separator}${cells.join(separator)}${separator}`;
           }
           return '';
         }).join('\n') || '';
-      
+
       default:
         return this.extractTextWithMarks(node);
     }
@@ -516,7 +534,7 @@ export class FormatConverter {
 
   private extractTextWithMarks(node: any): string {
     if (!node) return '';
-    
+
     if (node.type === 'text') {
       let text = node.text || '';
       if (node.marks) {
@@ -538,7 +556,7 @@ export class FormatConverter {
           } else if (hasEm) {
             text = `_${text}_`;
           }
-          
+
           if (hasStrike) {
             text = `-${text}-`;
           }
@@ -551,15 +569,15 @@ export class FormatConverter {
       }
       return text;
     }
-    
+
     if (node.type === 'listItem' && node.content) {
       return node.content.map((n: any) => this.extractTextWithMarks(n)).join(' ');
     }
-    
+
     if (Array.isArray(node.content)) {
       return node.content.map((n: any) => this.extractTextWithMarks(n)).join('');
     }
-    
+
     return '';
   }
 
