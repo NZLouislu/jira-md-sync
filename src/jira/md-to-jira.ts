@@ -159,6 +159,11 @@ export async function mdToJira(options: MdToJiraOptions): Promise<{
     throw new Error('Invalid Jira configuration: jiraUrl and projectKey are required');
   }
 
+  // Validate input directory
+  if (options.inputDir !== undefined && options.inputDir.trim() === '') {
+    throw new Error('Input directory is required');
+  }
+
   // Get input directory: use provided value, or default to 'jiramd' in project root
   const inputDirRaw = options.inputDir || 'jiramd';
   const inputDir = path.isAbsolute(inputDirRaw)
