@@ -114,7 +114,7 @@ export async function jiraToMdCli(): Promise<void> {
   if (inputDirEnv) {
     const resolvedInputDir = path.isAbsolute(inputDirEnv)
       ? inputDirEnv
-      : path.resolve(currentDir, "../../../", inputDirEnv);
+      : path.resolve(process.cwd(), inputDirEnv);
 
     try {
       await fs.access(resolvedInputDir);

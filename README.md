@@ -63,9 +63,15 @@ Bidirectional sync between Jira Cloud and Markdown files. Manage Jira issues as 
 ## Installation
 
 ```bash
-npm install jira-md-sync dotenv
+npm install jira-md-sync jira2md dotenv
 npm install -D typescript ts-node @types/node
 ```
+
+**Note:** The `jira2md` package is required for proper Markdown ↔ Jira format conversion. It ensures correct rendering of:
+- Text formatting (bold, italic, strikethrough)
+- Code blocks and inline code
+- Lists and checkboxes
+- Links and tables
 
 ## Quick Start
 
@@ -162,7 +168,8 @@ Add to `package.json`:
     "jira-to-md": "ts-node src/jira/jira-to-md.ts"
   },
   "dependencies": {
-    "jira-md-sync": "^0.1.0",
+    "jira-md-sync": "^0.1.1",
+    "jira2md": "^3.0.1",
     "dotenv": "^16.0.0"
   },
   "devDependencies": {
@@ -171,6 +178,18 @@ Add to `package.json`:
     "typescript": "^5.0.0"
   }
 }
+```
+
+**Important:** The `jira2md` package is **required** for proper format conversion between Markdown and Jira formats. Without it, you may experience:
+- Incorrect rendering of bold, italic, and strikethrough text
+- Broken code blocks and lists
+- Malformed links and tables
+- Checkbox formatting issues
+
+Make sure to install all dependencies:
+```bash
+npm install jira-md-sync jira2md dotenv
+npm install -D typescript ts-node @types/node
 ```
 
 ## Usage
@@ -706,9 +725,17 @@ Some formats may not survive round-trip perfectly:
 **Common Issues:**
 - "No stories found": Check markdown format (`- Story:` prefix required)
 - "Issue already exists": Expected (create-only mode)
-- "Input directory not found": Check `JIRA_INPUT_DIR` or create `jiramd/` directory
+- "Input directory not found": Check `JIRA_MD_INPUT_DIR` or create `jiramd/` directory
 - Checkboxes not interactive: Use `- [ ]` format with spaces
 - Labels order changed: Tool now preserves original order from input files
+
+**Format Issues:**
+- **Incorrect text formatting in Jira** (showing `~~text~~` instead of strikethrough, `**text**` instead of bold):
+  - **Cause**: Missing `jira2md` dependency
+  - **Solution**: Install it: `npm install jira2md`
+  - **Why needed**: `jira2md` converts between Markdown and Jira Wiki markup formats
+- **Broken code blocks or lists**: Ensure `jira2md` is installed
+- **Malformed links or tables**: Verify `jira2md` version is `^3.0.1` or higher
 
 **Directory Issues:**
 ```bash

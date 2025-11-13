@@ -5,7 +5,7 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [0.1.1] - 2025-11-13
+## [0.1.0] - 2025-11-13
 
 ### Breaking Changes
 - **Environment variables renamed**: `MD_INPUT_DIR` → `JIRA_MD_INPUT_DIR`, `MD_OUTPUT_DIR` → `JIRA_MD_OUTPUT_DIR`
@@ -13,10 +13,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - See [Migration Guide](docs/MIGRATION_GUIDE.md) for upgrade instructions
 
 ### Fixed
+- **Labels order preservation**: Labels now maintain original order from input files instead of alphabetical order from Jira
+- **Ordered list numbering**: Sequential numbers now preserved in round-trip conversion (1, 2, 3... instead of all 1s)
 - **Assignees and Labels parsing**: Now correctly handles both array format `[value1, value2]` and comma-separated format `value1, value2`
 - **Strikethrough rendering**: Improved detection logic to avoid conflicts with list markers
 - **User search**: Added cleanup of bracket characters before searching for users in Jira
 - **Markdown parser**: Enhanced both section header and list story formats to support bracket notation
+- **Path resolution**: Fixed inputDir path resolution in CLI to use process.cwd() instead of __dirname
 
 ### Improved
 - **Format flexibility**: Both `Assignees: [backend, frontend]` and `Assignees: backend, frontend` now work correctly
@@ -27,9 +30,17 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Added
 - New documentation file: `docs/NPM_PACKAGE_FIXES.md` - Detailed explanation of fixes and usage recommendations
 - New documentation file: `docs/MIGRATION_GUIDE.md` - Step-by-step guide for upgrading from v0.1.0
-- New documentation file: `docs/修复说明_中文.md` - Chinese documentation for fixes
+- New documentation file: `docs/BUG_FIXES_CN.md` - Chinese documentation for fixes
+- New documentation file: `docs/ENV_VARS_UPDATE_CN.md` - Chinese documentation for environment variable updates
 - New example file: `examples/correct-format-example.md` - Demonstrates correct Markdown format with Chinese comments
 - New template file: `.env.example` - Template for environment configuration
+- New summary file: `UPDATE_COMPLETE_CN.md` - Chinese update summary
+
+### Documentation
+- **Important**: Clarified that `jira2md` is a **required dependency** for proper format conversion
+- Added installation instructions emphasizing `jira2md` requirement in README
+- Added troubleshooting section for format issues caused by missing `jira2md`
+- Updated all documentation to include `jira2md` in installation commands
 
 ## [0.1.0] - 2025-10-10
 

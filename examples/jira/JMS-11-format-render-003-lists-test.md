@@ -23,8 +23,8 @@ Testing unordered and ordered lists with nesting.
 **Ordered List:**
 
 1. First step
-1. Second step
-1. Third step
+2. Second step
+3. Third step
 
    1. Sub-step 3.1
 

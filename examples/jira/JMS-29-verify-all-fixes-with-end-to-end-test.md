@@ -12,11 +12,11 @@ Run complete end-to-end verification of all fixes using the test-format-renderin
 **Verification Steps:**
 
 1. Clean up existing test issues in Jira
-1. Run npm run md-to-jira with test-format-rendering.md
-1. Verify all issues created with correct data
-1. Run npm run jira-to-md to export back
-1. Compare original vs exported markdown
-1. Verify all fields match exactly
+2. Run npm run md-to-jira with test-format-rendering.md
+3. Verify all issues created with correct data
+4. Run npm run jira-to-md to export back
+5. Compare original vs exported markdown
+6. Verify all fields match exactly
 
 **Fields to Verify:**
 

@@ -20,6 +20,11 @@ async function main() {
     ? outputDirEnv
     : path.resolve(process.cwd(), outputDirEnv);
 
+  const inputDirEnv = process.env.JIRA_MD_INPUT_DIR || "jiramd";
+  const inputDir = path.isAbsolute(inputDirEnv)
+    ? inputDirEnv
+    : path.resolve(process.cwd(), inputDirEnv);
+
   const logger = {
     info: (...args: any[]) => console.log(...args),
     debug: (...args: any[]) => console.log(...args),
@@ -29,10 +34,12 @@ async function main() {
 
   console.log("Starting Jira to Markdown export...");
   console.log(`Output directory: ${outputDir}`);
+  console.log(`Input directory (for label order): ${inputDir}`);
 
   const result = await jiraToMd({
     jiraConfig,
     outputDir,
+    inputDir,
     jql: `project = ${jiraConfig.projectKey} ORDER BY key ASC`,
     dryRun: false,
     logger

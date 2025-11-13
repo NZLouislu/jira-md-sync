@@ -32,13 +32,47 @@ export class FormatConverter {
     const jiraWiki = this.adfToJiraWiki(adf);
     let markdown = this.jiraToMarkdown(jiraWiki);
 
-    // Fix jira2md bug: it converts [ ] to < >
-    // This is a workaround for checkbox formatting
     markdown = markdown.replace(/- < > /g, '- [ ] ');
     markdown = markdown.replace(/- <x> /g, '- [x] ');
     markdown = markdown.replace(/- <X> /g, '- [X] ');
 
+    markdown = this.fixOrderedListNumbers(markdown);
+
     return markdown;
+  }
+
+  private fixOrderedListNumbers(markdown: string): string {
+    const lines = markdown.split('\n');
+    const result: string[] = [];
+    let inOrderedList = false;
+    let listCounter = 0;
+
+    for (let i = 0; i < lines.length; i++) {
+      const line = lines[i];
+      const orderedListMatch = line.match(/^(\s*)1\.\s+(.+)$/);
+
+      if (orderedListMatch) {
+        const indent = orderedListMatch[1];
+        const content = orderedListMatch[2];
+
+        if (!inOrderedList || (i > 0 && !lines[i - 1].match(/^(\s*)1\.\s+/))) {
+          inOrderedList = true;
+          listCounter = 1;
+        } else {
+          listCounter++;
+        }
+
+        result.push(`${indent}${listCounter}. ${content}`);
+      } else {
+        if (line.trim() === '' || !line.match(/^\s*1\.\s+/)) {
+          inOrderedList = false;
+          listCounter = 0;
+        }
+        result.push(line);
+      }
+    }
+
+    return result.join('\n');
   }
 
   private jiraWikiToADF(jiraWiki: string): any {
@@ -491,9 +525,10 @@ export class FormatConverter {
         ).join('\n') || '';
 
       case 'orderedList':
-        return node.content?.map((item: any) =>
-          `# ${this.extractTextWithMarks(item)}`
-        ).join('\n') || '';
+        return node.content?.map((item: any) => {
+          const text = this.extractTextWithMarks(item);
+          return `# ${text}`;
+        }).join('\n') || '';
 
       case 'taskList':
         return node.content?.map((item: any) => {

@@ -59,8 +59,8 @@ Testing complex combinations of multiple formats in one story.
       1. Subsection: Important Notes
 
 1. Always test with `--dry-run` first
-1. Check your **API permissions**
-1. Review the [security guidelines](https://example.com/security)
+2. Check your **API permissions**
+3. Review the [security guidelines](https://example.com/security)
 
   **Final checklist:**
 
